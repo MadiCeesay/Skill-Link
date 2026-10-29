@@ -1,0 +1,514 @@
+[
+    {
+        "path":  "backend\\src\\app.js",
+        "Hash":  "2BCF772AC09D753934D0DE861383D3DAB5C1EC81AD0E21E1FDA2DAB50F2028E9"
+    },
+    {
+        "path":  "backend\\src\\config\\database.js",
+        "Hash":  "1455D408185420C7EE4AF9190E01D9086AD2D2F58B7B7AE6C8CEA51892A22858"
+    },
+    {
+        "path":  "backend\\src\\config\\env.js",
+        "Hash":  "51A3FCE8D0C52F682F1B4C1B4B6DA919788304A929FE851FB828B46764CE3931"
+    },
+    {
+        "path":  "backend\\src\\constants\\roles.js",
+        "Hash":  "D6C49E0A90E2E8FD7E3783E3180BD0111F5B2D0FF030D21135FDBF5789F9FC26"
+    },
+    {
+        "path":  "backend\\src\\middleware\\authenticate.js",
+        "Hash":  "192BF850EF3EAAE5F125C8E836D753FDBBE051593D3D4BDF3C53A5A34F5233C6"
+    },
+    {
+        "path":  "backend\\src\\middleware\\authorize.js",
+        "Hash":  "B94515A7A9528AE646B2A6D42D4A0B0693556F3650422DE78090FCD2BAC314E3"
+    },
+    {
+        "path":  "backend\\src\\middleware\\errorHandler.js",
+        "Hash":  "F578C2EEC69639DEED7904D254AA6C85DDC144C6EE9494DE51871EA758C2B2A3"
+    },
+    {
+        "path":  "backend\\src\\middleware\\validate.js",
+        "Hash":  "ADFF05B39289228B0D69732B9A5E79A4D30DB8C8EFA64058E84C9FFBF1CD1FFA"
+    },
+    {
+        "path":  "backend\\src\\modules\\admin\\audit.model.js",
+        "Hash":  "0F0307759EA5F5C5DC0E8F41DE2ED9FEB60F91FD515E9591B31000C47498F54D"
+    },
+    {
+        "path":  "backend\\src\\modules\\admin\\operations.routes.js",
+        "Hash":  "3D18B18F105E021C56045D70E00A87F9A528A26A40929203D4D42612716AE5C1"
+    },
+    {
+        "path":  "backend\\src\\modules\\admin\\operations.service.js",
+        "Hash":  "BA3A0DF126F4551853239D7B3C2A8BF17F90DC4E8E9613A315C9AEE7DC29C11E"
+    },
+    {
+        "path":  "backend\\src\\modules\\auth\\auth.controller.js",
+        "Hash":  "E487117860D531ECD478886DE40D28184F500F5F67A954AF1F4BA39DE01CDFCB"
+    },
+    {
+        "path":  "backend\\src\\modules\\auth\\auth.routes.js",
+        "Hash":  "DFCF80770A7366962F0B54CDEE7B2055C63FC6F58AF7DABF7B1606D581EDA59E"
+    },
+    {
+        "path":  "backend\\src\\modules\\auth\\auth.service.js",
+        "Hash":  "87C4546C4BEFA0544A5DAFEF83673426AB37A0A314B92FECFAECB8504CE1AFAD"
+    },
+    {
+        "path":  "backend\\src\\modules\\auth\\auth.validator.js",
+        "Hash":  "6B8FB02677D75AC87419A14BC13837BBE0274FB5DD6A79B8F8A96E569C25C744"
+    },
+    {
+        "path":  "backend\\src\\modules\\auth\\session.model.js",
+        "Hash":  "183CEB1FEDB004A383AE318878682E0F3B6E15838DCF55090CFEB1B1B87EEC37"
+    },
+    {
+        "path":  "backend\\src\\modules\\auth\\token.service.js",
+        "Hash":  "AF7C2D9AA442B82595A9710EC68E9A95EEF6792EBF88978D18A258645C8D9054"
+    },
+    {
+        "path":  "backend\\src\\modules\\availability\\.gitkeep",
+        "Hash":  "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    },
+    {
+        "path":  "backend\\src\\modules\\availability\\availability.model.js",
+        "Hash":  "089C130AFE292F5762B40EB8EBB2208163F59757FD17CECCCE815CB6DA0ED105"
+    },
+    {
+        "path":  "backend\\src\\modules\\availability\\availability.routes.js",
+        "Hash":  "4E3FFE54D832F8622ED5191A8C615B4FDF415CCC269EAC4E957E65E78BC18148"
+    },
+    {
+        "path":  "backend\\src\\modules\\availability\\availability.service.js",
+        "Hash":  "F92664790E5CFD47DB81E1D9B3A98EE13C2C8EEEF3E77689E860DD6AD9C05450"
+    },
+    {
+        "path":  "backend\\src\\modules\\availability\\availability.validator.js",
+        "Hash":  "B24A3B00E037C9C045A60BC6FC048F86544CD38B30A78F3833755EB8FF20D46F"
+    },
+    {
+        "path":  "backend\\src\\modules\\bookings\\.gitkeep",
+        "Hash":  "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    },
+    {
+        "path":  "backend\\src\\modules\\bookings\\booking.controller.js",
+        "Hash":  "F2D839DD7B7EFCFDAD6C094FB7D2AE25FDF6D277535F43F4936DEA4619837BA0"
+    },
+    {
+        "path":  "backend\\src\\modules\\bookings\\booking.model.js",
+        "Hash":  "7655ADF1A8684EE62216073B9AF83AD137AE88909C4EE665BA6EE0FE4CB79D16"
+    },
+    {
+        "path":  "backend\\src\\modules\\bookings\\booking.routes.js",
+        "Hash":  "1977A880DBCDB708C1192925ED78F0433EEDF5F1186C348E060782BA056706B9"
+    },
+    {
+        "path":  "backend\\src\\modules\\bookings\\booking.serializer.js",
+        "Hash":  "D15B895BBDED9E691A27B48FAA93073856B39E92697BF8F8AEC9070AACD34839"
+    },
+    {
+        "path":  "backend\\src\\modules\\bookings\\booking.service.js",
+        "Hash":  "69A3BA715B5E7992845B6489D437008DC8E7E63A4808289D8F6EDBBB996FC46E"
+    },
+    {
+        "path":  "backend\\src\\modules\\bookings\\booking.validator.js",
+        "Hash":  "2FB9790EB6FF10571619BDE2B4494117CED0D9F17BC0733E495CC8EE1CB7CA8B"
+    },
+    {
+        "path":  "backend\\src\\modules\\bookings\\lifecycle.routes.js",
+        "Hash":  "6CD4B15639ECFBD8943C54DF8C19B5F55E4145677244EE63CB33122D7C15640F"
+    },
+    {
+        "path":  "backend\\src\\modules\\bookings\\lifecycle.serializer.js",
+        "Hash":  "ED40089681B534EA6B9154E9F43332FC15D7130507A1113312B04EC819806DDE"
+    },
+    {
+        "path":  "backend\\src\\modules\\bookings\\lifecycle.service.js",
+        "Hash":  "A4C602E249FBB0F7169083DD370D400E26C0654D1F1C945BFB04D2D6DB119E00"
+    },
+    {
+        "path":  "backend\\src\\modules\\bookings\\lifecycle.validator.js",
+        "Hash":  "7CBFF034BA6E859422F00D808DBA28A8869A4866186B6AB6B9BF4B19CD54C7E7"
+    },
+    {
+        "path":  "backend\\src\\modules\\bookings\\proposal.model.js",
+        "Hash":  "D0EC6D3A4A968F72FFF07B9D14B4257E0803FA98F4770A27058E46CF5B27159D"
+    },
+    {
+        "path":  "backend\\src\\modules\\catalog\\catalog.controller.js",
+        "Hash":  "4519DD3B543C312760DDF19A6DA73E454D4F4C2900F6DBAB9444FCB935391744"
+    },
+    {
+        "path":  "backend\\src\\modules\\catalog\\catalog.routes.js",
+        "Hash":  "8D78C7B6C17D7B7CEE7A7535D1CE79266F0414D7FF80E7E6DDE8BE4CD63191A3"
+    },
+    {
+        "path":  "backend\\src\\modules\\catalog\\catalog.service.js",
+        "Hash":  "62DBFB2FD2F7C67532F4AC8C7293DE5A925224D893C31C799AA3067EE590D19C"
+    },
+    {
+        "path":  "backend\\src\\modules\\catalog\\catalog.validator.js",
+        "Hash":  "A2ABC58EA85E5F5954373D0A6011DF3ED546CD4F79022326FD33A3A0646918A2"
+    },
+    {
+        "path":  "backend\\src\\modules\\catalog\\category.model.js",
+        "Hash":  "47531ADD0691A225C154AF1445FF4BC5A7822943BFB81365396ADCD5C7F865E3"
+    },
+    {
+        "path":  "backend\\src\\modules\\catalog\\service.model.js",
+        "Hash":  "ABC2BCD9DC8868C6AB618B2C5B8CCBA1D4D629ADF12FA70BC3267257302AB0B7"
+    },
+    {
+        "path":  "backend\\src\\modules\\conversations\\.gitkeep",
+        "Hash":  "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    },
+    {
+        "path":  "backend\\src\\modules\\conversations\\contact.service.js",
+        "Hash":  "F0A7BA77E61DCF9991F715273DB81DD867AF7EDC84683E41E34B9201945552FF"
+    },
+    {
+        "path":  "backend\\src\\modules\\conversations\\conversation.model.js",
+        "Hash":  "CCC1854661F570F6E701C9234553FB0423591BA164943A9832E5DB546B309DF1"
+    },
+    {
+        "path":  "backend\\src\\modules\\conversations\\conversation.routes.js",
+        "Hash":  "C2C0D10F1EE518A726B81A53BE561982F7A42A052F0A68721B058E4965889EE8"
+    },
+    {
+        "path":  "backend\\src\\modules\\conversations\\conversation.serializer.js",
+        "Hash":  "9FDA239FFC679A9B24A2C6D425F028534EE601E682E82B982C1892BA3E841A7A"
+    },
+    {
+        "path":  "backend\\src\\modules\\conversations\\conversation.service.js",
+        "Hash":  "91506708330FACF3EFDF7DCA8752C93962583B43AFA5D10F85C4F3ECA52ED662"
+    },
+    {
+        "path":  "backend\\src\\modules\\conversations\\conversation.validator.js",
+        "Hash":  "422419335EEB98AE31438C33D7C9CD7DF3F7A24915CE7DE154F250F34839352C"
+    },
+    {
+        "path":  "backend\\src\\modules\\discovery\\discovery.controller.js",
+        "Hash":  "4FEAD269F84E3CE79BFA90B4CA3443AB2AADD3E51EDEF6D7FACF509C982519B0"
+    },
+    {
+        "path":  "backend\\src\\modules\\discovery\\discovery.routes.js",
+        "Hash":  "A149DE305A15B0BF7C692B648042897EDB204ADEA8C4DA02B6190EBCFA4977D6"
+    },
+    {
+        "path":  "backend\\src\\modules\\discovery\\discovery.serializer.js",
+        "Hash":  "98E465A52EE968CD9B218CE0403730418F25BA359A52A4980B6AFC5A84B2507F"
+    },
+    {
+        "path":  "backend\\src\\modules\\discovery\\discovery.service.js",
+        "Hash":  "9026BD0F3AB86C95CB922A8CDCB20941625C1C51E0BF2E639547E11399806B5B"
+    },
+    {
+        "path":  "backend\\src\\modules\\discovery\\discovery.validator.js",
+        "Hash":  "505621AE70C90C3EB85BBA7994CC5B3AAE2A1E3026F4BB65D62EFDEDD1A0C966"
+    },
+    {
+        "path":  "backend\\src\\modules\\disputes\\.gitkeep",
+        "Hash":  "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    },
+    {
+        "path":  "backend\\src\\modules\\disputes\\dispute.model.js",
+        "Hash":  "4DD9D97ADE57766E9F6DCF9AA3DCD2BD2091EDC87C10F5175F30FEB4C7311F76"
+    },
+    {
+        "path":  "backend\\src\\modules\\jobRequests\\job.controller.js",
+        "Hash":  "43FD4E7FCFCA063438674FBD7347AC353CBBD035C8E0FE310BD869500523A59F"
+    },
+    {
+        "path":  "backend\\src\\modules\\jobRequests\\job.model.js",
+        "Hash":  "03CA5236D1D0B60E08E02F361B4D363C4BE4A7BBA0822443CC370E3EE331DBB0"
+    },
+    {
+        "path":  "backend\\src\\modules\\jobRequests\\job.routes.js",
+        "Hash":  "BD99CE09953DD5CE13AE882679E8A5C504754265F5156738CC56169DFC3F5E7C"
+    },
+    {
+        "path":  "backend\\src\\modules\\jobRequests\\job.serializer.js",
+        "Hash":  "4ABB4FF0CAAA425F4E315FE9D2428406EB01F488C0DC60A0C8B77459B5FE6C0E"
+    },
+    {
+        "path":  "backend\\src\\modules\\jobRequests\\job.service.js",
+        "Hash":  "1B9B3467EC7A9FC05D044FA3B4572B18FCC1F048E2B87BC1FD303E119F64C93B"
+    },
+    {
+        "path":  "backend\\src\\modules\\jobRequests\\job.validator.js",
+        "Hash":  "8FFB2B29693229B08650444ED9838D1FE91E842B88967862BCB2BABB17657249"
+    },
+    {
+        "path":  "backend\\src\\modules\\matching\\matching.service.js",
+        "Hash":  "B0294B2CE5CA23EB520CDA536F015E8696029FC78655865190FA24F94635C978"
+    },
+    {
+        "path":  "backend\\src\\modules\\media\\audio.validator.js",
+        "Hash":  "39DCB747F04D3BE879632C8BEF5BEE682BC2239D36804D2CE4E95B31C1B595E8"
+    },
+    {
+        "path":  "backend\\src\\modules\\media\\media.controller.js",
+        "Hash":  "59F2B329BE873C397859106CEEB3FC8291287DC3872B6E2B8D6F037518512789"
+    },
+    {
+        "path":  "backend\\src\\modules\\media\\media.model.js",
+        "Hash":  "B0F8203E691D251B588C02A4F86FB3C74641DA471D6ECC4178FD5A2E3C27791A"
+    },
+    {
+        "path":  "backend\\src\\modules\\media\\media.routes.js",
+        "Hash":  "7E0F6B43C656F396C50AA70FD7364146D09A7B1913EF074DAC59FF2AE6354A47"
+    },
+    {
+        "path":  "backend\\src\\modules\\media\\media.service.js",
+        "Hash":  "1F5C7570E1CDCD12A76D13FA198C3936BAB7207B307EAE698858059457CF069E"
+    },
+    {
+        "path":  "backend\\src\\modules\\notifications\\.gitkeep",
+        "Hash":  "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    },
+    {
+        "path":  "backend\\src\\modules\\notifications\\notification.model.js",
+        "Hash":  "64624604B1826A85ABD77A36AE7140686E2D71EB13A61328BB0AE85F8DD4356B"
+    },
+    {
+        "path":  "backend\\src\\modules\\notifications\\notification.routes.js",
+        "Hash":  "A2A43BB559037A92185FD1947FD1F4D14C29B26867F5DF320D03AD37BB3D1CE4"
+    },
+    {
+        "path":  "backend\\src\\modules\\notifications\\notification.service.js",
+        "Hash":  "D573D3DABA4B21213336BBB24FDC78FEA431018CED1FC2BF14F3E9624BA7A006"
+    },
+    {
+        "path":  "backend\\src\\modules\\payments\\.gitkeep",
+        "Hash":  "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    },
+    {
+        "path":  "backend\\src\\modules\\payments\\payment.model.js",
+        "Hash":  "DED92825CE62527A4292622BB870D41A931F53C32AB790A4376FD2B0D4F5BE67"
+    },
+    {
+        "path":  "backend\\src\\modules\\payments\\payment.routes.js",
+        "Hash":  "CD7E2498DFA1F7DCEF9E4DA574377CABC5989CA9D9733D6E6ECF899A4FC95B4A"
+    },
+    {
+        "path":  "backend\\src\\modules\\payments\\payment.serializer.js",
+        "Hash":  "B73594E5AC386D8267ACD648CAE4FB9BCFD18B21E533F06616F222437E38FFC7"
+    },
+    {
+        "path":  "backend\\src\\modules\\payments\\payment.service.js",
+        "Hash":  "6C0622F383AE1A424AE10BF8B943B87FCA439EAC67062B48C44DCB731230413D"
+    },
+    {
+        "path":  "backend\\src\\modules\\payments\\payment.validator.js",
+        "Hash":  "3B5437572204B1D18A5C5B8E41D88F7D9C4450B06E3D493583E5D4F017A6544C"
+    },
+    {
+        "path":  "backend\\src\\modules\\quotes\\quote.controller.js",
+        "Hash":  "78A87280AC61FE3D9B2A23BF7EEA960D0FB70B917BF26E56B28CD28FEE2B1EA7"
+    },
+    {
+        "path":  "backend\\src\\modules\\quotes\\quote.model.js",
+        "Hash":  "13A324D42F1FB8EEC4BFB5D366E3DF36508D496FB6B2E19FD2DEDADAF6DC63E5"
+    },
+    {
+        "path":  "backend\\src\\modules\\quotes\\quote.routes.js",
+        "Hash":  "B32F3070810E5F802B3E42BCBE85078AB71E01B1CC5027A509C6B2086AC03E6A"
+    },
+    {
+        "path":  "backend\\src\\modules\\quotes\\quote.serializer.js",
+        "Hash":  "D6F69EBE205118F5352A6C526EAB9EFD30BD198CBABAA806F9058351EDBF4BCF"
+    },
+    {
+        "path":  "backend\\src\\modules\\quotes\\quote.service.js",
+        "Hash":  "2F4225468604A2B2258946D61D74C5E20C66DE98A344BAA7F69E1EE2A416CC51"
+    },
+    {
+        "path":  "backend\\src\\modules\\quotes\\quote.validator.js",
+        "Hash":  "588562F63E2B8DB9473E6603D06CA6D334441EB6C7D3C4A5919F5633DDE11077"
+    },
+    {
+        "path":  "backend\\src\\modules\\reviews\\.gitkeep",
+        "Hash":  "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    },
+    {
+        "path":  "backend\\src\\modules\\reviews\\review.model.js",
+        "Hash":  "938199109788F2C028B1875898C39F31663573324E463C9AE343B5357599227C"
+    },
+    {
+        "path":  "backend\\src\\modules\\users\\user.model.js",
+        "Hash":  "74560D85EB96AD1A7CE7068477816DF8AA2095F707157F1AD5C56C3ED56CCCED"
+    },
+    {
+        "path":  "backend\\src\\modules\\verifications\\verification.controller.js",
+        "Hash":  "4106219EB7E482B6D9D7FF8802910B611113E76DD5BF8B47F2FBB743BFC859CC"
+    },
+    {
+        "path":  "backend\\src\\modules\\verifications\\verification.model.js",
+        "Hash":  "084E6746A28E09000885B799AB18B861013656D4096AFE4F7CFA09BB46E32CFD"
+    },
+    {
+        "path":  "backend\\src\\modules\\verifications\\verification.routes.js",
+        "Hash":  "0A122532E9167118EC765005C45AD6DAF7C9E0642A01E92D16D8DF198F805238"
+    },
+    {
+        "path":  "backend\\src\\modules\\verifications\\verification.serializer.js",
+        "Hash":  "2FFAA605B1F8FB142FE3626B56E2471261C7C527EF03A19B25587CC0FCFCAE1A"
+    },
+    {
+        "path":  "backend\\src\\modules\\verifications\\verification.service.js",
+        "Hash":  "3206F730FBD404161104E1217F5F58DD3CBBE33C0649EC7652F900AF094167A3"
+    },
+    {
+        "path":  "backend\\src\\modules\\verifications\\verification.validator.js",
+        "Hash":  "1ECE3C8C2B57D4CC9E930CBBC7140D9A6DAF233CD8EBAE9061EBEB69887AC0A6"
+    },
+    {
+        "path":  "backend\\src\\modules\\workers\\worker.controller.js",
+        "Hash":  "0CB836C482141B8E0020F58244AD4B554BDD30135FDF7A1E49D5EB01F14FFDC6"
+    },
+    {
+        "path":  "backend\\src\\modules\\workers\\worker.model.js",
+        "Hash":  "39F215B297497DC95120DFD331B27EFED5957C248885FD0708C0BB64359C8611"
+    },
+    {
+        "path":  "backend\\src\\modules\\workers\\worker.routes.js",
+        "Hash":  "ED0E3614BE7C1C5436FCD884EAC0B58F55AFB557037C0388F850C2354CEC3CF4"
+    },
+    {
+        "path":  "backend\\src\\modules\\workers\\worker.serializer.js",
+        "Hash":  "E3931C2E192EF68D1E03554DAD70AD8BCC26060453BC00F270235665371F0E20"
+    },
+    {
+        "path":  "backend\\src\\modules\\workers\\worker.service.js",
+        "Hash":  "3AEC49F649EB87CA039BF1EB3666051F7BBFC197835D02BE7611A9BAEE32DCA3"
+    },
+    {
+        "path":  "backend\\src\\modules\\workers\\worker.validator.js",
+        "Hash":  "E68D761EACEE7112018AF28DD3EE024533D8EC4539C5E05EDF3ECB1C701E1DFA"
+    },
+    {
+        "path":  "backend\\src\\providers\\email\\.gitkeep",
+        "Hash":  "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    },
+    {
+        "path":  "backend\\src\\providers\\email\\disabled.provider.js",
+        "Hash":  "564AC14C74BCCC887A85D23050C795FBA277CB469D4FB9CE54F2889366394F15"
+    },
+    {
+        "path":  "backend\\src\\providers\\media\\cloudinary.provider.js",
+        "Hash":  "0D61870CB5CC1D885A59165B93BE71B666173B03C6346F46AB53C985F7AA949A"
+    },
+    {
+        "path":  "backend\\src\\providers\\media\\unavailable.provider.js",
+        "Hash":  "C7EFA2A2402107CD1A6E62569910A9E964483105DA798F0731E2C242EF9C5221"
+    },
+    {
+        "path":  "backend\\src\\providers\\payments\\.gitkeep",
+        "Hash":  "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    },
+    {
+        "path":  "backend\\src\\providers\\payments\\mock.provider.js",
+        "Hash":  "E0F5A36EBA84B81CD5E2C386B0111E85907B3B891A1F7C16786A7613FB6A6F66"
+    },
+    {
+        "path":  "backend\\src\\realtime\\socket.js",
+        "Hash":  "CF3944E37B0C56431C510EE353407C123F509DF74B106E8B0727C4AA56C6173E"
+    },
+    {
+        "path":  "backend\\src\\sockets\\.gitkeep",
+        "Hash":  "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    },
+    {
+        "path":  "backend\\src\\utils\\ApiError.js",
+        "Hash":  "01ACFCC7F9ECF895C5D6C19875F8A25C83B45AD9AE2718F62001D0C7DAE345E1"
+    },
+    {
+        "path":  "backend\\src\\utils\\response.js",
+        "Hash":  "7176A9309ECD8A395770C9B6437B3019A3C76C8767C3173FD7CC2901F3442D65"
+    },
+    {
+        "path":  "backend\\src\\utils\\transaction.js",
+        "Hash":  "D2EC5D62BEB471060FF243987103BD30C01B83026320EC67AEA558FA222A7B24"
+    },
+    {
+        "path":  "backend\\src\\utils\\validation.js",
+        "Hash":  "7EA2E43049C4FACAC9C5754274DF05F8F9506B10134C7825460D903781D3A387"
+    },
+    {
+        "path":  "backend\\tests\\helpers\\fake-media.provider.js",
+        "Hash":  "D40D47C1BB23F98B3A30C02D14028DAC0493FDF425C34054CA54EDA9E4F388D7"
+    },
+    {
+        "path":  "backend\\tests\\integration\\auth.test.js",
+        "Hash":  "3ED840046A88796C3E9EB511D56EA301242E7F73B1B71F9865081A85F7EEBF6A"
+    },
+    {
+        "path":  "backend\\tests\\integration\\phase2.test.js",
+        "Hash":  "55A5302104FDB852687E994E782730E1EBEAB836BB62F5AD206EAC122A7E45CF"
+    },
+    {
+        "path":  "backend\\tests\\integration\\phase3.test.js",
+        "Hash":  "9DE8BC5A2AB14B30FFEB9AD339243F92B59625999C8424A77BDBAD1190F6C7F9"
+    },
+    {
+        "path":  "backend\\tests\\integration\\phase4.test.js",
+        "Hash":  "8836FD1D2BC467BE6023AA29A5D5029A030C9B9E98A7A471788A02B5EA063BD6"
+    },
+    {
+        "path":  "backend\\tests\\integration\\phase5.test.js",
+        "Hash":  "AFD0A1C7B6F4D63D483101ACE14D9BCE4C364D1A94DB104BB94933ABBC725D84"
+    },
+    {
+        "path":  "backend\\tests\\integration\\phase6.test.js",
+        "Hash":  "F436BF1B429075178E298902BA6F534680735AE1C4D215E68DC6D584FF634668"
+    },
+    {
+        "path":  "backend\\tests\\integration\\phase7.test.js",
+        "Hash":  "513D938EB2079061D1254597995E49A43116C4DE428152738A07BA21190A57F4"
+    },
+    {
+        "path":  "backend\\tests\\integration\\phase8.test.js",
+        "Hash":  "E883CD4F37C944E9E3848103B8E2260264B5AC5DEA4A313DDE17EBE464B26B05"
+    },
+    {
+        "path":  "backend\\tests\\integration\\phase9.test.js",
+        "Hash":  "7ADA5FCC1CB2C12E6BBD37F9CA645816D7702E12DD827DF1DE95BB4EB5F5762D"
+    },
+    {
+        "path":  "backend\\tests\\unit\\cloudinary-provider.test.js",
+        "Hash":  "74EF64FB7D34593634ACE7049EDDC5C960CF2E07A84B7F43CEB69789ABB6C74D"
+    },
+    {
+        "path":  "backend\\tests\\unit\\config.test.js",
+        "Hash":  "3E57A3C9943A2AF576928357C9386DC63C19E69C8B5BCD6A822F1EED370EB7F9"
+    },
+    {
+        "path":  "backend\\tests\\unit\\phase2-config.test.js",
+        "Hash":  "F8BB87F0CB501336F7531D29580567BCA23EB42953454F5F7F44444A1035D11A"
+    },
+    {
+        "path":  "backend\\tests\\unit\\phase3-config.test.js",
+        "Hash":  "9AF4D9F169DBFBB908C40D182FCAF1D5993AED9C7789DD7F47FE343F7A4DCF8A"
+    },
+    {
+        "path":  "backend\\tests\\unit\\v1-hardening.test.js",
+        "Hash":  "6646B6BF9FB870BBB7311DFBC5721569A02BA16740491BA3402FD2873D6C4AFF"
+    },
+    {
+        "path":  "backend\\docs\\architecture.md",
+        "Hash":  "617EF0FC0C89861161894816DA83B4C26631B64A9BFA6FD0D88B051A800E5E0A"
+    },
+    {
+        "path":  "backend\\docs\\final-backend-report.md",
+        "Hash":  "927E1D0201339AA1E50E30C27A313D19C812F314F2C16CF55D1ABDC1ABCFC5C1"
+    },
+    {
+        "path":  "backend\\docs\\openapi.json",
+        "Hash":  "991ACE6FB09317883872A44CC5D994571929A471FB4EB28F1ADD548DBF487029"
+    },
+    {
+        "path":  "backend\\docs\\ui-inspiration.md",
+        "Hash":  "80D1B570CF5086CBE1B59F456D7CE0602B479191D9B014217B1F0B79FD75B7CD"
+    }
+]

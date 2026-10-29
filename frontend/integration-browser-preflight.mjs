@@ -1,0 +1,3 @@
+﻿import { chromium } from '@playwright/test';
+const browser=await chromium.launch({channel:'chrome'});
+try {for(const origin of ['http://localhost:5173','http://127.0.0.1:5173']) {const page=await browser.newPage();try{await page.goto(origin,{waitUntil:'domcontentloaded',timeout:15000});const result=await page.evaluate(async()=>{try{const r=await fetch('http://localhost:5000/api/categories');return{origin:location.origin,status:r.status};}catch{return{origin:location.origin,requestFailed:true};}});console.log(JSON.stringify(result));}catch{console.log(JSON.stringify({origin,frontendReachable:false}));}await page.close();}}finally{await browser.close();}
