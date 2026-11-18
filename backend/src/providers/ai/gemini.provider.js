@@ -16,8 +16,9 @@ export class GeminiProvider {
    * @param {string} options.model one model, or several separated by commas: the first is
    *   preferred and the others are backups used when it is busy or unavailable.
    */
-  constructor({ apiKey, model, fetchImpl = globalThis.fetch, timeoutMs = 25000 }) {
+  constructor({ apiKey, model, fetchImpl = globalThis.fetch, timeoutMs = 30000, log = true }) {
     this.apiKey = apiKey;
+    this.log = log;
     this.models = String(model).split(',').map(name => name.trim()).filter(Boolean);
     this.fetch = fetchImpl;
     this.timeoutMs = timeoutMs;
@@ -42,6 +43,8 @@ export class GeminiProvider {
         return await this.callModel(model, body);
       } catch (error) {
         lastError = error;
+        // Logged without any customer content, so failures can be diagnosed from the terminal.
+        if (this.log) console.warn('[assistant] Gemini model ' + model + ' failed: ' + error.reason);
         if (!error.retryWithAnotherModel) break;
       }
     }
@@ -59,24 +62,32 @@ export class GeminiProvider {
         body,
         signal: controller.signal,
       });
-    } catch {
-      throw failure(new ApiError(503, 'AI_UNAVAILABLE', 'The assistant is not responding right now. Please describe the job yourself.'), true);
+    } catch (error) {
+      const reason = error.name === 'AbortError' ? 'no answer within ' + this.timeoutMs / 1000 + ' seconds'
+        : 'network error: ' + (error.cause?.code || error.cause?.message || error.message);
+      throw failure(new ApiError(503, 'AI_UNAVAILABLE', 'The assistant is not responding right now. Please describe the job yourself.'), true, reason);
     } finally {
       clearTimeout(timer);
     }
     // 429 rate limit, 503 overloaded, 404 model retired: another model may still work.
     if ([429, 503, 404, 500].includes(response.status))
-      throw failure(new ApiError(503, 'AI_BUSY', 'The assistant is busy. Please try again in a minute.'), true);
-    if (!response.ok) throw failure(new ApiError(502, 'AI_PROVIDER_ERROR', 'The assistant could not help with this request.'), false);
+      throw failure(new ApiError(503, 'AI_BUSY', 'The assistant is busy. Please try again in a minute.'), true, 'HTTP ' + response.status + ' ' + await errorMessage(response));
+    if (!response.ok) throw failure(new ApiError(502, 'AI_PROVIDER_ERROR', 'The assistant could not help with this request.'), false, 'HTTP ' + response.status + ' ' + await errorMessage(response));
     const result = await response.json().catch(() => null);
     const text = result?.candidates?.[0]?.content?.parts?.map(part => part.text || '').join('') || '';
     try { return parseJson(text); }
-    catch (error) { throw failure(error, true); }
+    catch (error) { throw failure(error, true, 'answer was not valid JSON (finish reason: ' + (result?.candidates?.[0]?.finishReason || 'none') + ')'); }
   }
 }
 
-function failure(apiError, retryWithAnotherModel) {
-  return { apiError, retryWithAnotherModel };
+function failure(apiError, retryWithAnotherModel, reason = apiError.code) {
+  return { apiError, retryWithAnotherModel, reason };
+}
+
+// Google's own error text, e.g. "This model is currently experiencing high demand".
+async function errorMessage(response) {
+  try { return ((await response.json())?.error?.message || '').slice(0, 200); }
+  catch { return ''; }
 }
 
 // Accepts plain JSON or JSON wrapped in ``` fences.

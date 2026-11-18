@@ -22,7 +22,7 @@ describe('Gemini provider', () => {
     const fetchImpl = vi.fn()
       .mockResolvedValueOnce({ ok: false, status: 503 })
       .mockResolvedValueOnce(ok(answer('{"title":"Fix tap"}')));
-    const provider = new GeminiProvider({ apiKey: 'k', model: 'busy-model, backup-model', fetchImpl });
+    const provider = new GeminiProvider({ apiKey: 'k', model: 'busy-model, backup-model', fetchImpl, log: false });
     expect(await provider.generateJson({ system: '', parts: [] })).toEqual({ title: 'Fix tap' });
     expect(fetchImpl.mock.calls.map(([url]) => url.split('/models/')[1])).toEqual(['busy-model:generateContent', 'backup-model:generateContent']);
   });
