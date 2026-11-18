@@ -21844,6 +21844,166 @@
           }
         }
       }
+    },
+    "/assistant/status": {
+      "get": {
+        "summary": "Whether the AI job assistant is switched on",
+        "tags": [
+          "Assistant"
+        ],
+        "description": "CUSTOMER. jobDraft is false when GEMINI_API_KEY is not configured.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "jobDraft": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "jobDraft"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not a customer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/assistant/job-draft": {
+      "post": {
+        "summary": "Draft a job description with AI",
+        "tags": [
+          "Assistant"
+        ],
+        "description": "CUSTOMER, 10 per hour. Turns a rough description, up to 3 of the customer's own JOB_ATTACHMENT photos and an optional VOICE_NOTE into an editable draft: title, description, catalog service, urgency, follow-up questions, safety note and a price range (25th-75th percentile of real SkillLink bookings when a service has at least 3, otherwise an AI estimate rounded to 50 GMD). Text containing contact details is rejected before anything is sent to the AI provider. See docs/job-assistant.md.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "text": {
+                    "type": "string",
+                    "maxLength": 1500
+                  },
+                  "photos": {
+                    "type": "array",
+                    "maxItems": 3,
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[a-fA-F0-9]{24}$"
+                    }
+                  },
+                  "voice": {
+                    "type": "string",
+                    "pattern": "^[a-fA-F0-9]{24}$"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Draft for the customer to review and edit"
+          },
+          "400": {
+            "description": "Missing input, contact details or someone else's media",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not a customer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Hourly limit reached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "AI answer unusable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Assistant switched off or busy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "x-socket-io": {

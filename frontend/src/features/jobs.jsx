@@ -1,4 +1,5 @@
 import { JobLocation } from '../components/JobLocation';
+import { JobAssistant } from '../components/JobAssistant';
 import { useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import {
@@ -233,6 +234,12 @@ function JobForm({ existing: j }) {
     [type, setType] = useState(j?.budget?.type || 'OPEN_TO_QUOTES'),
     [retainedAttachments, setRetainedAttachments] = useState(j?.attachments || []),
     [newAttachments, setNewAttachments] = useState([]),
+    // Photos the customer added in the AI assistant are attached to the job too.
+    [assistantAttachments, setAssistantAttachments] = useState([]),
+    [title, setTitle] = useState(j?.title || ''),
+    [description, setDescription] = useState(j?.description || ''),
+    [budgetMin, setBudgetMin] = useState(gmdInput(j?.budget?.minAmountBututs)),
+    [budgetMax, setBudgetMax] = useState(gmdInput(j?.budget?.maxAmountBututs)),
     [error, setError] = useState(null),
     action = useAction(),
     navigate = useNavigate();
@@ -251,7 +258,7 @@ function JobForm({ existing: j }) {
           ...(v.region ? { region: v.region } : {}),
         },
         privateAddress: v.privateAddress,
-        attachments: [...retainedAttachments, ...newAttachments],
+        attachments: [...new Set([...retainedAttachments, ...newAttachments, ...assistantAttachments])].slice(0, 5),
         budget: { type },
       };
       if (type === 'FIXED') body.budget.amountBututs = bututs(v.amount);
@@ -280,8 +287,22 @@ function JobForm({ existing: j }) {
       setError(err);
     }
   }
+  // Copies the AI suggestion into the form. Everything stays editable.
+  function applyDraft(draft, photoIds) {
+    setTitle(draft.title);
+    setDescription(draft.description);
+    if (draft.service) setSelectedService(draft.service.id);
+    if (draft.priceRange) {
+      setType('RANGE');
+      setBudgetMin(gmdInput(draft.priceRange.minBututs));
+      setBudgetMax(gmdInput(draft.priceRange.maxBututs));
+    }
+    setAssistantAttachments(photoIds);
+    toast('The suggestion is in the form. Check it and change anything that is not right.');
+  }
   return (
     <form onSubmit={save} className="form-stack">
+      {!j && <JobAssistant onApply={applyDraft} />}
       <div className="two-grid">
         <div className="stack">
           <Panel
@@ -310,7 +331,8 @@ function JobForm({ existing: j }) {
               required
               minLength={5}
               maxLength={120}
-              defaultValue={j?.title}
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
               placeholder="e.g. Repair a leaking kitchen tap"
             />
             <Field
@@ -321,7 +343,8 @@ function JobForm({ existing: j }) {
               required
               minLength={20}
               maxLength={3000}
-              defaultValue={j?.description}
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
               placeholder="Tell the professional what needs doing, and anything useful to know."
             />
             <FileUpload
@@ -329,8 +352,13 @@ function JobForm({ existing: j }) {
               label="Add project photos"
               multiple
               onChange={setNewAttachments}
-              max={5 - retainedAttachments.length}
+              max={5 - retainedAttachments.length - assistantAttachments.length}
             />
+            {assistantAttachments.length > 0 && (
+              <p className="muted small">
+                {assistantAttachments.length} photo{assistantAttachments.length === 1 ? '' : 's'} from the assistant will be attached.
+              </p>
+            )}
             {retainedAttachments.map((mediaId) => (
               <div className="row between small" key={mediaId}>
                 <span>Existing project photo</span>
@@ -376,7 +404,8 @@ function JobForm({ existing: j }) {
                   step="0.01"
                   min="0"
                   required
-                  defaultValue={gmdInput(j?.budget.minAmountBututs)}
+                  value={budgetMin}
+                  onChange={(event) => setBudgetMin(event.target.value)}
                 />
                 <Field
                   label="Maximum · GMD"
@@ -385,7 +414,8 @@ function JobForm({ existing: j }) {
                   step="0.01"
                   min="0"
                   required
-                  defaultValue={gmdInput(j?.budget.maxAmountBututs)}
+                  value={budgetMax}
+                  onChange={(event) => setBudgetMax(event.target.value)}
                 />
               </div>
             )}

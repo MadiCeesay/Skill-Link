@@ -19,6 +19,9 @@ export function loadConfig(input = process.env) {
     CLOUDINARY_CLOUD_NAME: optionalCredential,
     CLOUDINARY_API_KEY: optionalCredential,
     CLOUDINARY_API_SECRET: optionalCredential,
+    // Optional: switches on the AI job description assistant (Google Gemini).
+    GEMINI_API_KEY: optionalCredential,
+    GEMINI_MODEL: z.string().regex(/^[a-z0-9][a-z0-9.-]{2,63}$/).default('gemini-flash-latest'),
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
     PORT: z.coerce.number().int().min(1).max(65535).default(5000),
     MONGODB_URI: z.string().regex(/^mongodb(\+srv)?:\/\//),

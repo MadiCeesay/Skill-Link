@@ -4426,3 +4426,67 @@ td .actions {
 .pricing-choice span { display: grid; gap: .35rem; }
 .pricing-choice small { color: #756b63; }
 .upload-control .protected-media { max-width: 140px; }
+
+/* AI job description assistant */
+.assistant-card {
+  border: 1px solid #f4c79a;
+  background: linear-gradient(180deg, #fff7ee, #fff);
+  border-radius: 18px;
+  padding: 18px;
+  display: grid;
+  gap: 14px;
+}
+.assistant-card header {
+  align-items: flex-start;
+  gap: 10px;
+}
+.assistant-card header svg {
+  color: #d97706;
+  flex: none;
+  margin-top: 3px;
+}
+.assistant-card h3 {
+  margin: 0 0 2px;
+  font-size: 16px;
+}
+.assistant-result {
+  border-top: 1px dashed #f4c79a;
+  padding-top: 14px;
+}
+.assistant-result h4 {
+  margin: 0;
+  font-size: 15px;
+}
+.assistant-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #b45309;
+  margin: 0;
+}
+.assistant-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+.assistant-facts dt {
+  font-size: 11px;
+  color: var(--muted);
+}
+.assistant-facts dd {
+  margin: 2px 0 0;
+  font-weight: 600;
+}
+.assistant-warning {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  background: #fff1f0;
+  color: #9f1d1d;
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin: 0;
+  font-size: 13px;
+}

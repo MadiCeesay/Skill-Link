@@ -45,6 +45,9 @@ import { jobRoutes } from './modules/jobRequests/job.routes.js';
 import { jobService } from './modules/jobRequests/job.service.js';
 import { quoteRoutes } from './modules/quotes/quote.routes.js';
 import { quoteService } from './modules/quotes/quote.service.js';
+import { GeminiProvider, UnavailableAiProvider } from './providers/ai/gemini.provider.js';
+import { jobAssistantService } from './modules/assistant/job-assistant.service.js';
+import { assistantRoutes } from './modules/assistant/job-assistant.routes.js';
 export function createApp(config, options = {}) {
   const app = express();
   app.set('env', config.NODE_ENV);
@@ -183,6 +186,11 @@ export function createApp(config, options = {}) {
     ),
   );
   app.use('/api', quoteRoutes(protect, quotes, options));
+  // AI job assistant: switched off unless GEMINI_API_KEY is set.
+  const ai = options.aiProvider ?? (config.GEMINI_API_KEY
+    ? new GeminiProvider({ apiKey: config.GEMINI_API_KEY, model: config.GEMINI_MODEL })
+    : new UnavailableAiProvider());
+  app.use('/api', assistantRoutes(protect, jobAssistantService(ai, media, options.mediaFetch), options));
   app.use('/api/auth', authRoutes(auth, options));
   app.use('/api', catalogRoutes(protect));
   app.use('/api', workerRoutes(protect, workerService(media)));
