@@ -256,6 +256,7 @@ export function bookingService(config, matching, media) {
         const expiresAt = input.expiresAt || p.expiresAt;
         if (!(expiresAt > new Date()) || expiresAt > p.expiresAt)
           throw new ApiError(400, 'INVALID_EXPIRY', 'Quote expiry must be before the request deadline');
+        if (!p.respondedAt) p.respondedAt = new Date();
         p.quoteRevision += 1;
         p.quotes.push({ revision: p.quoteRevision, amountBututs: input.amountBututs,
           note: input.note, expiresAt, createdAt: new Date() });
@@ -325,6 +326,8 @@ export function bookingService(config, matching, media) {
         }
         if (action === 'QUOTE_DECLINED' && p.status !== 'QUOTED')
           throw new ApiError(409, 'QUOTE_NOT_PENDING', 'There is no quote to decline');
+        // The worker's first answer is remembered for the ranking's responsiveness score.
+        if (!p.respondedAt && ['ACCEPTED', 'REJECTED'].includes(action)) p.respondedAt = new Date();
         p.status = action === 'QUOTE_DECLINED' ? 'REJECTED' : action;
         await p.save({ session });
         return { proposal: proposalDTO(p, user) };

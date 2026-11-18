@@ -15,6 +15,7 @@ import {
   MapPin,
   Upload,
   FileText,
+  Sparkles,
 } from 'lucide-react';
 import { useAction, useApi } from '../api/hooks';
 import { upload, api } from '../api/client';
@@ -494,6 +495,17 @@ export function WorkerCard({ worker }) {
             <span key={s.id}>{s.name}</span>
           ))}
         </div>
+        {w.recommendation?.reasons?.length > 0 && (
+          // Why SkillLink recommends this professional, in plain words.
+          <ul className="match-reasons" aria-label="Why this professional is recommended">
+            {w.recommendation.reasons.map((reason) => (
+              <li key={reason.code}>
+                <Sparkles size={12} aria-hidden="true" />
+                {reason.text}
+              </li>
+            ))}
+          </ul>
+        )}
         <div className="worker-card-bottom">
           <strong>{pricing(w.pricing?.[0])}</strong>
           <Link

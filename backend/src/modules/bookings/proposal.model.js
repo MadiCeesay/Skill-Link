@@ -43,6 +43,8 @@ const schema = new mongoose.Schema(
       default: 'PENDING',
     },
     expiresAt: { type: Date, required: true },
+    // First time the worker accepted, declined or quoted. Used for worker ranking.
+    respondedAt: Date,
     booking: id('Booking'),
   },
   { timestamps: true, strict: 'throw' },

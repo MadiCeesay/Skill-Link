@@ -54,7 +54,7 @@ const recruitPhoto = '/images/workers.jpg';
 export function Home() {
   const catalog = useCatalog(),
     services = catalog.services,
-    workers = useApi('/workers', { limit: 3, sort: 'trust' }),
+    workers = useApi('/workers', { limit: 3, sort: 'recommended' }),
     navigate = useNavigate();
   const reviewed = workers.data?.workers?.find((w) => w.reviewCount > 0);
   const reviews = useApi(
@@ -579,9 +579,10 @@ export function Discovery() {
               label="Sort by"
               name="sort"
               as="select"
-              defaultValue={params.sort || 'relevance'}
+              defaultValue={params.sort || 'recommended'}
             >
-              <option value="relevance">Relevance</option>
+              <option value="recommended">Recommended for you</option>
+              <option value="relevance">Nearest & verified</option>
               <option value="trust">Verification</option>
               <option value="rating">Rating</option>
               <option value="distance">Distance (coordinates required)</option>

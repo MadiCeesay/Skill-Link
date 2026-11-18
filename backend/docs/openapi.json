@@ -2090,6 +2090,52 @@
             "minimum": 5,
             "multipleOf": 5,
             "description": "Distance rounded up to a five-km band; never precise metres"
+          },
+          "recommendation": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "Present only for sort=recommended.",
+            "properties": {
+              "score": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "reasons": {
+                "type": "array",
+                "maxItems": 3,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "NEARBY",
+                        "HIGHLY_RATED",
+                        "FAST_REPLIES",
+                        "REPLIES_SAME_DAY",
+                        "EXPERIENCED",
+                        "VERIFIED",
+                        "AVAILABLE_NOW",
+                        "NEW"
+                      ]
+                    },
+                    "text": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "text"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "score",
+              "reasons"
+            ]
           }
         },
         "required": [
@@ -9465,7 +9511,7 @@
         "tags": [
           "Discovery"
         ],
-        "description": "PUBLIC. Complete active public profiles with active catalogs. verified means APPROVED identity. No AI, exact coordinates or private account data. Nearby search uses [longitude,latitude] and returns five-km bands. Default sort relevance; with coordinates relevance means distance.",
+        "description": "PUBLIC. Complete active public profiles with active catalogs. verified means APPROVED identity. No AI, exact coordinates or private account data. Nearby search uses [longitude,latitude] and returns five-km bands. Default sort recommended: a transparent weighted score of distance, Bayesian rating, verification, responsiveness, completed jobs and availability (see docs/worker-ranking.md); each card then includes recommendation.score and up to three plain-language reasons. With relevance and coordinates, relevance means distance.",
         "responses": {
           "200": {
             "description": "Success",
@@ -9733,13 +9779,14 @@
             "schema": {
               "type": "string",
               "enum": [
+                "recommended",
                 "relevance",
                 "distance",
                 "trust",
                 "rating",
                 "price"
               ],
-              "default": "relevance",
+              "default": "recommended",
               "description": "distance requires coordinates; price requires service plus comparable numeric pricingType"
             }
           }
