@@ -36,6 +36,16 @@ const message = new mongoose.Schema(
     priceOffer: id('ChatPriceOffer'),
     readBy: [id('User')],
     clientMessageId: { type: String, maxlength: 80, required: true },
+    // Automatic transcript of a voice note, filled in the background after sending.
+    transcript: {
+      type: new mongoose.Schema({
+        status: { type: String, enum: ['PENDING', 'DONE', 'FAILED', 'HIDDEN'], required: true },
+        text: { type: String, maxlength: 4000 },
+        languageCode: { type: String, maxlength: 12 },
+        completedAt: Date,
+      }, { _id: false, strict: 'throw' }),
+      default: undefined,
+    },
   },
   { timestamps: { createdAt: true, updatedAt: false }, strict: 'throw' },
 );

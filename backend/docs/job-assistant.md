@@ -38,7 +38,7 @@ Note: on Gemini's free tier, Google may use inputs to improve its products. Use 
 
 ```
 GEMINI_API_KEY=        # from https://aistudio.google.com, server only
-GEMINI_MODEL=gemini-2.5-flash,gemini-2.5-flash-lite,gemini-flash-latest   # backups are tried when the first is busy
+GEMINI_MODEL=gemini-3.8-flash,gemini-3.5-flash-lite,gemini-3.5-flash   # backups are tried when the first is busy
 ```
 
 ## How to evaluate it

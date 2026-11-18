@@ -48,6 +48,7 @@ import { quoteService } from './modules/quotes/quote.service.js';
 import { GeminiProvider, UnavailableAiProvider } from './providers/ai/gemini.provider.js';
 import { jobAssistantService } from './modules/assistant/job-assistant.service.js';
 import { assistantRoutes } from './modules/assistant/job-assistant.routes.js';
+import { ElevenLabsTranscriber, UnavailableTranscriber } from './providers/ai/elevenlabs.provider.js';
 export function createApp(config, options = {}) {
   const app = express();
   app.set('env', config.NODE_ENV);
@@ -147,7 +148,17 @@ export function createApp(config, options = {}) {
     ['checkout'],
   );
   app.use('/api', paymentRoutes(protect, payments, options));
-  const conversations = effects(conversationService(media, bookingService(config, matching, media)), ['send']);
+  // Voice-note transcripts: switched off unless ELEVENLABS_API_KEY is set.
+  const transcriber = options.transcriber ?? (config.ELEVENLABS_API_KEY
+    ? new ElevenLabsTranscriber({ apiKey: config.ELEVENLABS_API_KEY, model: config.ELEVENLABS_MODEL })
+    : new UnavailableTranscriber());
+  const conversations = effects(conversationService(media, bookingService(config, matching, media), {
+    transcriber,
+    // Looked up at call time: the Socket.IO server replaces app.locals.publish after startup.
+    publish: (...args) => app.locals.publish(...args),
+    fetchImpl: options.mediaFetch,
+    background: options.transcribeInBackground,
+  }), ['send']);
   app.locals.services = { auth, conversations };
   app.locals.publish = async () => {};
   app.use(

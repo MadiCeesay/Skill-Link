@@ -73,6 +73,17 @@ export function conversationRoutes(
     },
   );
   r.post(
+    '/conversations/:id/messages/:messageId/transcript',
+    params(z.object({ id: objectId, messageId: objectId }).strict()),
+    limit,
+    validate(emptyBodySchema),
+    async (q, s) => {
+      const data = await service.retryTranscript(q.validatedParams.id, q.validatedParams.messageId, q.auth.user);
+      await publish(q.validatedParams.id, 'message-updated', data);
+      success(s, data);
+    },
+  );
+  r.post(
     '/conversations/:id/read',
     params(idParams('id')),
     limit,

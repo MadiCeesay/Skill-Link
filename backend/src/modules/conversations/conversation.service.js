@@ -10,10 +10,49 @@ import { bookingStatus } from '../bookings/booking.serializer.js';
 import { User } from '../users/user.model.js';
 import { MediaAsset } from '../media/media.model.js';
 import { ApiError } from '../../utils/ApiError.js';
-import { assertNoContact } from './contact.service.js';
+import { assertNoContact, hasContact } from './contact.service.js';
 import { conversationDTO, messageDTO } from './conversation.serializer.js';
 import { pageMetadata } from '../discovery/discovery.service.js';
-export function conversationService(media, bookings) {
+/**
+ * @param {object} voice optional voice-note transcription settings
+ * @param {object} voice.transcriber ElevenLabsTranscriber or UnavailableTranscriber
+ * @param {Function} voice.publish sends a live update to the conversation's participants
+ * @param {Function} voice.fetchImpl downloads a signed media URL (injected for tests)
+ * @param {boolean} voice.background false makes tests wait for the transcript
+ */
+export function conversationService(media, bookings, voice = {}) {
+  const transcriber = voice.transcriber;
+  const publishUpdate = voice.publish || (async () => {});
+  const fetchMedia = voice.fetchImpl || globalThis.fetch;
+  // Downloads the voice note, transcribes it and stores the result on the message.
+  // Runs after the message is sent, so a slow or failed transcription never blocks chat.
+  async function transcribeVoice(messageId) {
+    const m = await Message.findById(messageId);
+    if (!m || m.type !== 'VOICE' || !transcriber?.available) return;
+    try {
+      const asset = await MediaAsset.findById(m.media).select('+storageKey +resourceType +format +deliveryType');
+      const { url } = await media.link(asset, 120);
+      const response = await fetchMedia(url);
+      if (!response?.ok) throw new Error('voice note could not be downloaded');
+      const result = await transcriber.transcribe({ buffer: Buffer.from(await response.arrayBuffer()), mimeType: asset.mimeType });
+      const text = result.text.slice(0, 4000);
+      const conversation = await Conversation.findById(m.conversation);
+      // Spoken phone numbers are kept out of the chat just like typed ones, until payment.
+      const hidden = text && hasContact(text) && !(await confirmed(conversation));
+      m.transcript = hidden
+        ? { status: 'HIDDEN', languageCode: result.languageCode || undefined, completedAt: new Date() }
+        : { status: text ? 'DONE' : 'FAILED', text: text || undefined, languageCode: result.languageCode || undefined, completedAt: new Date() };
+    } catch (error) {
+      console.warn('[transcription] message ' + messageId + ' failed: ' + error.message);
+      m.transcript = { status: 'FAILED', completedAt: new Date() };
+    }
+    await m.save();
+    await publishUpdate(String(m.conversation), 'message-updated', { message: messageDTO(m) }).catch(() => {});
+  }
+  async function scheduleTranscription(messageId) {
+    if (voice.background === false) return transcribeVoice(messageId);
+    setImmediate(() => transcribeVoice(messageId).catch(error => console.warn('[transcription] ' + error.message)));
+  }
   async function present(rows, user) {
     const ids = type => rows.filter(c => c.contextType === type).map(c => c.contextId);
     const [quotes, proposals, bookings] = await Promise.all([
@@ -171,12 +210,15 @@ export function conversationService(media, bookings) {
           input.type === 'IMAGE' ? 'CHAT_IMAGE' : 'VOICE_NOTE',
         );
       try {
+        const transcribe = input.type === 'VOICE' && transcriber?.available;
         const m = await Message.create({
           ...input,
           conversation: id,
           sender: user._id,
           readBy: [user._id],
+          ...(transcribe ? { transcript: { status: 'PENDING' } } : {}),
         });
+        if (transcribe) await scheduleTranscription(m._id);
         return { message: messageDTO(m) };
       } catch (e) {
         if (e.code === 11000) {
@@ -199,6 +241,19 @@ export function conversationService(media, bookings) {
         }
         throw e;
       }
+    },
+    // Lets a participant ask again when a transcript failed (for example, the service was busy).
+    async retryTranscript(id, messageId, user) {
+      await own(id, user);
+      if (!transcriber?.available) throw new ApiError(503, 'TRANSCRIPTION_UNAVAILABLE', 'Voice transcription is not configured');
+      const m = await Message.findOneAndUpdate(
+        { _id: messageId, conversation: id, type: 'VOICE', 'transcript.status': mongoose.trusted({ $in: ['FAILED'] }) },
+        { $set: { transcript: { status: 'PENDING' } } },
+        { new: true },
+      );
+      if (!m) throw new ApiError(409, 'TRANSCRIPT_NOT_RETRYABLE', 'Only a failed voice-note transcript can be retried');
+      await scheduleTranscription(m._id);
+      return { message: messageDTO(voice.background === false ? await Message.findById(m._id) : m) };
     },
     async read(id, user) {
       await own(id, user);

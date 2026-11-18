@@ -286,6 +286,7 @@ function Conversation({ id }) {
                                 alt="Shared project photo"
                               />
                             )}
+                            {m.type === 'VOICE' && m.transcript && <VoiceTranscript conversationId={id} message={m} />}
                           </div>
                           <small>
                             {dateTime(m.createdAt)}
@@ -594,6 +595,44 @@ function Composer({ id }) {
           />
         </label>
       </div>
+    </div>
+  );
+}
+
+// Spoken-language names for the codes ElevenLabs returns (ISO 639-1 or 639-3).
+const LANGUAGES = { en: 'English', eng: 'English', wo: 'Wolof', wol: 'Wolof', fr: 'French', fra: 'French',
+  ff: 'Fula', ful: 'Fula', mnk: 'Mandinka', man: 'Mandinka', ar: 'Arabic', ara: 'Arabic' };
+
+// Automatic text version of a voice note, so it can be read without playing it.
+function VoiceTranscript({ conversationId, message }) {
+  const action = useAction(),
+    cache = useQueryClient(),
+    [error, setError] = useState(null),
+    t = message.transcript;
+  async function retry() {
+    setError(null);
+    try {
+      await action.mutateAsync({ path: '/conversations/' + conversationId + '/messages/' + message.id + '/transcript', body: {} });
+      cache.invalidateQueries({ queryKey: ['api', '/conversations/' + conversationId + '/messages'] });
+    } catch (e) {
+      setError(e);
+    }
+  }
+  if (t.status === 'PENDING') return <p className="voice-transcript muted">Writing out this voice note…</p>;
+  if (t.status === 'HIDDEN')
+    return <p className="voice-transcript muted">Transcript hidden: it may contain contact details. Keep contact details in SkillLink until the booking is paid.</p>;
+  if (t.status === 'FAILED')
+    return (
+      <div className="voice-transcript muted">
+        Transcript not available.{' '}
+        <button type="button" className="text-button" onClick={retry} disabled={action.isPending}>Try again</button>
+        {error && <ErrorNotice error={error} />}
+      </div>
+    );
+  return (
+    <div className="voice-transcript">
+      <p>{t.text}</p>
+      <small className="muted">Automatic transcript{t.languageCode && LANGUAGES[t.languageCode] ? ' · ' + LANGUAGES[t.languageCode] : ''} · may contain errors</small>
     </div>
   );
 }

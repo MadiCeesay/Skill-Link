@@ -4,7 +4,7 @@
 import 'dotenv/config';
 import { GeminiProvider } from '../src/providers/ai/gemini.provider.js';
 
-const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash,gemini-2.5-flash-lite,gemini-flash-latest';
+const model = process.env.GEMINI_MODEL || 'gemini-3.8-flash,gemini-3.5-flash-lite,gemini-3.5-flash';
 const provider = new GeminiProvider({ apiKey: process.env.GEMINI_API_KEY || '', model });
 console.log('Models to try:', provider.models.join(' -> '));
 const started = Date.now();

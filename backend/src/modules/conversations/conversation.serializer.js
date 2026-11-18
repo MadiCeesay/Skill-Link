@@ -19,4 +19,5 @@ export const messageDTO = (m, offer = null) => ({
   clientMessageId: m.clientMessageId,
   createdAt: m.createdAt,
   ...(offer && typeof offer === 'object' ? { priceOffer: priceOfferDTO(offer) } : {}),
+  ...(m.transcript?.status ? { transcript: { status: m.transcript.status, text: m.transcript.text, languageCode: m.transcript.languageCode } } : {}),
 });

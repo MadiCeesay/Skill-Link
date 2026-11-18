@@ -4490,3 +4490,18 @@ td .actions {
   margin: 0;
   font-size: 13px;
 }
+
+/* Automatic voice-note transcript under a voice message */
+.voice-transcript {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  font-size: 13px;
+  max-width: 34ch;
+}
+.voice-transcript p {
+  margin: 0 0 4px;
+}
+.voice-transcript small {
+  font-size: 11px;
+}

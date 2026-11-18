@@ -21,8 +21,11 @@ export function loadConfig(input = process.env) {
     CLOUDINARY_API_SECRET: optionalCredential,
     // Optional: switches on the AI job description assistant (Google Gemini).
     GEMINI_API_KEY: optionalCredential,
+    // Optional: switches on automatic voice-note transcripts (ElevenLabs Scribe).
+    ELEVENLABS_API_KEY: optionalCredential,
+    ELEVENLABS_MODEL: z.string().regex(/^[a-z0-9][a-z0-9_.-]{2,63}(,[a-z0-9][a-z0-9_.-]{2,63}){0,3}$/).default('scribe_v2,scribe_v1'),
     // One model, or a comma-separated list where later models are backups when the first is busy.
-    GEMINI_MODEL: z.string().regex(/^[a-z0-9][a-z0-9.-]{2,63}(,[a-z0-9][a-z0-9.-]{2,63}){0,3}$/).default('gemini-2.5-flash,gemini-2.5-flash-lite,gemini-flash-latest'),
+    GEMINI_MODEL: z.string().regex(/^[a-z0-9][a-z0-9.-]{2,63}(,[a-z0-9][a-z0-9.-]{2,63}){0,3}$/).default('gemini-3.8-flash,gemini-3.5-flash-lite,gemini-3.5-flash'),
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
     PORT: z.coerce.number().int().min(1).max(65535).default(5000),
     MONGODB_URI: z.string().regex(/^mongodb(\+srv)?:\/\//),

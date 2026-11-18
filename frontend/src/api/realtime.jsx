@@ -45,6 +45,11 @@ export function RealtimeProvider({ children }) {
         });
       }
     });
+    // A voice-note transcript finished (or failed) in the background.
+    socket.on('message-updated', (data) => {
+      if (data.message?.conversation === active)
+        cache.invalidateQueries({ queryKey: ['api', '/conversations/' + active + '/messages'] });
+    });
     socket.on('price-offer', data => {
       if (data.offer?.conversation !== active) return;
       cache.invalidateQueries({ queryKey: ['api', '/conversations/' + active + '/messages'] });
