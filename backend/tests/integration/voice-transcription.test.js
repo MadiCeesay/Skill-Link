@@ -26,7 +26,7 @@ async function login(app, user) {
   const r = await request(app).post('/api/auth/login').send({ email: user.email, password: 'Test-password123' });
   return r.body.data.accessToken;
 }
-const sendVoice = async (app, user, clientMessageId = 'voice-' + Math.random()) =>
+const sendVoice = async (app, user, clientMessageId = 'voice-' + String(Math.random()).slice(2)) =>
   request(app).post('/api/conversations/' + conversation.id + '/messages').set('Authorization', 'Bearer ' + await login(app, user))
     .send({ type: 'VOICE', media: voice.id, clientMessageId });
 

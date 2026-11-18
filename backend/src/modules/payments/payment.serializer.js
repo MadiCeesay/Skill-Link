@@ -26,6 +26,6 @@ export const ledgerDTO = (e) => ({
   type: e.type,
   amountBututs: e.amountBututs,
   currency: e.currency,
-  simulated: p.provider !== 'modempay',
+  simulated: true,
   createdAt: e.createdAt,
 });
