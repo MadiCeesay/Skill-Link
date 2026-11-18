@@ -33,7 +33,7 @@ test('public discovery, real catalog and profile retain the original design dire
       .first(),
   ).toBeVisible();
   await expect(
-    page.getByRole('link', { name: 'Post a job', exact: true }).first(),
+    page.getByRole('link', { name: "Post request", exact: true }).first(),
   ).toBeVisible();
   await page.getByRole('heading', { name: 'Lamin Jallow' }).click();
   await expect(
@@ -79,7 +79,7 @@ test('registration creates a real customer account and routes to its workspace',
     page.getByRole('heading', { name: 'Hello, Browser.' }),
   ).toBeVisible();
 });
-test('customer and professional complete the quote, booking, messaging, mock payment and review journey', async ({
+test("customer and professional complete the offer, booking, messaging, mock payment and review journey", async ({
   browser,
   request,
 }) => {
@@ -93,41 +93,41 @@ test('customer and professional complete the quote, booking, messaging, mock pay
   w.on('pageerror', (e) => errors.push(e.message));
   await login(c, 'customer@example.test');
   await c
-    .getByRole('link', { name: 'Post a job', exact: true })
+    .getByRole('link', { name: "Post request", exact: true })
     .first()
     .click();
   await c
     .getByLabel('Service', { exact: true })
     .selectOption({ label: 'Electrician' });
-  await c.getByLabel('Job title').fill('Repair the kitchen socket');
+  await c.getByLabel("Request title").fill('Repair the kitchen socket');
   await c
-    .getByLabel('Describe your project')
+    .getByLabel("Describe the work")
     .fill(
       'Please inspect and repair the damaged electrical socket in the kitchen.',
     );
   await c.getByLabel('General service area').fill('Brikama');
-  await c.getByRole('button', { name: 'Publish job' }).click();
+  await c.getByRole('button', { name: "Post request" }).click();
   await expect(
     c.getByRole('heading', { name: 'Repair the kitchen socket' }),
   ).toBeVisible();
   const jobURL = c.url();
   await login(w, 'professional@example.test');
-  await w.getByRole('link', { name: 'Opportunities', exact: true }).click();
+  await w.getByRole('link', { name: "Requests", exact: true }).click();
   await w.getByRole('heading', { name: 'Repair the kitchen socket' }).click();
-  await w.getByLabel('Your quote · GMD').fill('450');
+  await w.getByLabel("Your offer · GMD").fill('450');
   await w
     .getByLabel('A note for the customer')
     .fill('I can test and repair the socket safely.');
   await w.getByLabel('Estimated duration · minutes (optional)').fill('60');
-  await w.getByRole('button', { name: 'Submit your quote' }).click();
+  await w.getByRole('button', { name: "Send offer" }).click();
   await expect(w.getByText('Changes saved successfully.')).toBeVisible();
   await navigate(c, new URL(jobURL).pathname);
-  await c.getByRole('button', { name: 'Accept quote', exact: true }).click();
+  await c.getByRole('button', { name: "Accept offer", exact: true }).click();
   await c
     .getByRole('dialog')
-    .getByRole('button', { name: 'Accept quote', exact: true })
+    .getByRole('button', { name: "Accept offer", exact: true })
     .click();
-  await expect(c.getByText('Quote accepted. Choose a schedule')).toBeVisible();
+  await expect(c.getByText("Offer accepted. Choose a schedule")).toBeVisible();
   const date = new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10);
   await c.getByLabel('Start time').fill(date + 'T10:00');
   await c.getByLabel('Finish time').fill(date + 'T11:00');
@@ -156,8 +156,8 @@ test('customer and professional complete the quote, booking, messaging, mock pay
   );
   await c.getByLabel('Your message').fill('');
   await navigate(c, '/app/bookings/' + bookingId + '/payment');
-  await c.getByRole('button', { name: 'Run payment simulation' }).click();
-  await expect(c.getByText('Held · simulated', { exact: true })).toBeVisible();
+  await c.getByRole('button', { name: "Record payment" }).click();
+  await expect(c.getByText('Held', { exact: true })).toBeVisible();
   await request.post('http://127.0.0.1:5001/_test/start-now/' + bookingId, {
     headers: { 'x-test-fixture': 'local-e2e-only' },
   });
@@ -191,7 +191,7 @@ test('customer and professional complete the quote, booking, messaging, mock pay
   await expect(c.getByText('Released', { exact: true })).toBeVisible();
   await navigate(c, '/app/bookings');
   await expect(
-    c.getByRole('heading', { name: 'Good work on the calendar.' }),
+    c.getByRole('heading', { name: "Bookings" }),
   ).toBeVisible();
   await navigate(c, '/app/bookings/' + bookingId);
   await expect(c.getByText('Released', { exact: true })).toBeVisible();
@@ -206,7 +206,7 @@ test('customer and professional complete the quote, booking, messaging, mock pay
   await customer.close();
   await professional.close();
 });
-test('fixed listed proposals require professional acceptance and share the booking engine', async ({
+test("fixed listed offers require professional acceptance and share the booking engine", async ({
   page,
   request,
 }) => {
@@ -234,19 +234,19 @@ test('fixed listed proposals require professional acceptance and share the booki
   await page.getByLabel('Preferred start').fill(date + 'T12:00');
   await page.getByLabel('Expected finish').fill(date + 'T13:00');
   await page.getByRole('radio', { name: /Use listed price/ }).check();
-  await page.getByRole('button', { name: 'Send service proposal' }).click();
+  await page.getByRole('button', { name: "Send request" }).click();
   await expect(
-    page.getByRole('heading', { name: 'Your service proposals.' }),
+    page.getByRole('heading', { name: "Offers" }),
   ).toBeVisible();
   await login(page, 'professional@example.test');
   await navigate(page, '/work/proposals');
   await page
-    .getByRole('button', { name: 'Accept proposal', exact: true })
+    .getByRole('button', { name: "Accept offer", exact: true })
     .first()
     .click();
   await page
     .getByRole('dialog')
-    .getByRole('button', { name: 'Accept proposal', exact: true })
+    .getByRole('button', { name: "Accept offer", exact: true })
     .click();
   await expect(page).toHaveURL(/\/work\/bookings\/[a-f0-9]{24}$/);
   await expect(page.getByText('Payment required').first()).toBeVisible();
@@ -574,7 +574,7 @@ test('private media, live delivery and record-preview-send work between particip
   await w.getByRole('button', { name: 'Send voice note' }).click();
   await expect(c.locator('.message-bubble audio')).toHaveCount(2);
   await c.reload();
-  await login(c, 'customer@example.test');
+  await expect(c).not.toHaveURL(/\/login$/);
   await navigate(c, '/app/messages/' + conversation.id);
   await expect(c.locator('.message-bubble audio')).toHaveCount(2);
   await expect.poll(() => c.locator('.message-bubble audio').last().evaluate(a => a.readyState)).toBeGreaterThanOrEqual(2);

@@ -12,7 +12,7 @@ import {
   Pager,
   ErrorNotice,
 } from '../components/ui';
-import { dateTime, title } from '../utils/format';
+import { dateTime } from '../utils/format';
 import { homeFor } from '../utils/policy';
 function target(n, user) {
   const b = homeFor(user.role);
@@ -50,9 +50,9 @@ export function Notifications() {
   return (
     <>
       <PageTitle
-        eyebrow="THE LATEST, ALL TOGETHER"
+
         title="You’re in the loop."
-        description="Updates on your projects, conversations and professional connections."
+        description="Updates about your requests, offers, bookings and messages."
       >
         <Button
           variant="outline"
@@ -80,7 +80,9 @@ export function Notifications() {
                       <Bell size={20} />
                     </span>
                     <div>
-                      <h3>{title(n.type)}</h3>
+                      {!n.readAt && <span className="notification-unread-label">Unread</span>}
+                      <h3>{n.title}</h3>
+                      <p>{n.message}</p>
                       <p className="muted">{dateTime(n.createdAt)}</p>
                       <Link
                         className="text-link"

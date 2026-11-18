@@ -127,8 +127,8 @@ function Footer() {
 const customerNav = [
   ['/app', LayoutDashboard, 'Overview'],
   ['/professionals', Search, 'Find professionals'],
-  ['/app/jobs', BriefcaseBusiness, 'My jobs'],
-  ['/app/proposals', Users, 'Service proposals'],
+  ['/app/jobs', BriefcaseBusiness, 'Requests'],
+  ['/app/proposals', Users, 'Offers'],
   ['/app/bookings', CalendarDays, 'Bookings'],
   ['/app/messages', MessageSquare, 'Messages'],
   ['/app/notifications', Bell, 'Notifications'],
@@ -136,9 +136,9 @@ const customerNav = [
 ];
 const workerNav = [
   ['/work', LayoutDashboard, 'Overview'],
-  ['/work/opportunities', Search, 'Opportunities'],
-  ['/work/quotes', BriefcaseBusiness, 'My quotes'],
-  ['/work/proposals', Users, 'Incoming proposals'],
+  ['/work/opportunities', Search, 'Requests'],
+  ['/work/quotes', BriefcaseBusiness, 'Offers sent'],
+  ['/work/proposals', Users, 'Offers received'],
   ['/work/bookings', CalendarDays, 'Bookings'],
   ['/work/messages', MessageSquare, 'Messages'],
   ['/work/availability', Clock3, 'Availability'],
@@ -150,12 +150,12 @@ const adminNav = [
   ['/admin/users', Users, 'People'],
   ['/admin/verifications', ShieldCheck, 'Verification'],
   ['/admin/catalog', Layers, 'Catalog'],
-  ['/admin/jobs', BriefcaseBusiness, 'Jobs'],
+  ['/admin/jobs', BriefcaseBusiness, 'Requests'],
   ['/admin/bookings', CalendarDays, 'Bookings'],
-  ['/admin/payments', Wallet, 'Payments & ledger'],
+  ['/admin/payments', Wallet, 'Payments'],
   ['/admin/disputes', Scale, 'Disputes'],
   ['/admin/reviews', Star, 'Reviews'],
-  ['/admin/audit', FileClock, 'Audit information'],
+  ['/admin/audit', FileClock, 'Admin activity'],
 ];
 export function WorkspaceLayout() {
   const { user, logout } = useAuth(),
@@ -253,8 +253,8 @@ export function WorkspaceLayout() {
         <div className="sidebar-bottom">
           <div className="sidebar-note">
             <ShieldCheck size={22} />
-            <strong>Work with confidence</strong>
-            <p>Keep conversations and agreements together.</p>
+            <strong>Keep work details together</strong>
+            <p>Use messages to discuss the work.</p>
           </div>
           <Link to="/" className="sidebar-explore">
             <Home size={17} />
@@ -290,7 +290,7 @@ export function WorkspaceLayout() {
             <strong>
               {user.role === 'ADMIN'
                 ? 'Admin workspace'
-                : 'Good to see you, ' + user.firstName + '.'}
+                : user.role === 'WORKER' ? 'Worker account' : 'Customer account'}
             </strong>
             <p className="workspace-breadcrumb">
               Workspace <ChevronRight size={12} />
@@ -363,7 +363,7 @@ export function WorkspaceLayout() {
           <Outlet />
         </main>
         <div className="workspace-footer">
-          SkillLink · Made for good work<span>The Gambia · GMD</span>
+          SkillLink<span>The Gambia · GMD</span>
         </div>
       </div>
       {user.role !== 'ADMIN' && (
@@ -373,7 +373,7 @@ export function WorkspaceLayout() {
             [
               base + (user.role === 'WORKER' ? '/opportunities' : '/jobs'),
               user.role === 'WORKER' ? Search : BriefcaseBusiness,
-              user.role === 'WORKER' ? 'Jobs' : 'My jobs',
+              'Requests',
             ],
             [base + '/bookings', CalendarDays, 'Bookings'],
             [base + '/messages', MessageSquare, 'Messages'],

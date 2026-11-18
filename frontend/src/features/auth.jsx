@@ -19,7 +19,6 @@ import {
   Button,
   Field,
   ErrorNotice,
-  Notice,
   Panel,
   PageTitle,
 } from '../components/ui';
@@ -80,25 +79,24 @@ export function AuthPage() {
           <h1>
             {register && kind === 'worker' ? (
               <>
-                Your skills.
+                Find work.
                 <br />
-                Your next chapter.
+                Manage your bookings.
               </>
             ) : (
               <>
-                A little help.
-                <br />A world of difference.
+                Find a worker.
+                <br />Get the work done.
               </>
             )}
           </h1>
           <p>
-            From everyday fixes to bigger possibilities. Connect with skilled
-            people right here in The Gambia.
+            Find local workers, agree a price and keep track of your bookings.
           </p>
           <div className="auth-story-points">
             <span>
               <ShieldCheck />
-              Evidence-backed verification
+              Worker identity checks
             </span>
             <span>
               <CheckCircle2 />
@@ -106,7 +104,7 @@ export function AuthPage() {
             </span>
           </div>
         </div>
-        <small>SkillLink · Local skills. Lasting connections.</small>
+        <small>SkillLink · Services in The Gambia</small>
       </section>
       <main className="auth-main" id="main">
         <Link to="/" className="back-link">
@@ -119,16 +117,16 @@ export function AuthPage() {
           <h1>
             {register
               ? kind === 'worker'
-                ? 'Put your skills to work.'
-                : 'Your next project starts here.'
-              : 'Good to see you again.'}
+                ? 'Create a worker account'
+                : 'Create a customer account'
+              : 'Sign in'}
           </h1>
           <p className="muted">
             {register
               ? 'Create your ' +
                 (kind === 'worker' ? 'professional' : 'customer') +
                 ' account.'
-              : 'Sign in to your SkillLink workspace.'}
+              : 'Enter your email and password.'}
           </p>
           {register && (
             <div className="segmented">
@@ -213,11 +211,6 @@ export function AuthPage() {
                 {show ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
-            {!register && (
-              <Link className="auth-forgot" to="/forgot-password">
-                Forgot password?
-              </Link>
-            )}
             {error && <ErrorNotice error={error} />}
             <Button type="submit" disabled={busy}>
               {busy
@@ -242,14 +235,9 @@ export function AuthPage() {
               </>
             )}
           </p>
-          <p className="auth-fine-print">
-            Your session stays in this tab’s memory. Reloading or closing the
-            page signs you out, keeping tokens out of browser storage.
-          </p>
           {register && (
             <p className="small muted">
-              This is a V1 demonstration.{' '}
-              <Link to="/terms">Read the demo information.</Link>
+              <Link to="/terms">Terms of use</Link>
             </p>
           )}
         </div>
@@ -264,27 +252,19 @@ export function AccountGap() {
       <PageTitle
         title={
           path.includes('password')
-            ? 'Let’s keep your account secure.'
+            ? 'Forgot password?'
             : 'Account verification'
         }
-        description="Clear information about your current SkillLink account."
       />
       <Panel
         title={
           path.includes('password')
-            ? 'Password recovery is not available yet'
+            ? 'Sign in to your account'
             : 'Email and phone verification'
         }
       >
-        <Notice>
-          {path.includes('password')
-            ? 'The current SkillLink service does not offer password reset or change. We won’t ask for a recovery code or claim to send a reset email.'
-            : 'Email and phone OTP verification are not connected in this version. Professional identity verification is a separate, functioning process in the professional workspace.'}
-        </Notice>
         <p className="prose">
-          You can continue using your existing account credentials. A recovery
-          and account-verification service must be added before these actions
-          can become available.
+          Use your current email and password to sign in.
         </p>
         <Button to="/login">Back to sign in</Button>
       </Panel>

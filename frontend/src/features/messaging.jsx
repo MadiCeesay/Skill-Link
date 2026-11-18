@@ -31,9 +31,10 @@ import {
   Notice,
   Field,
   Chip,
+  Avatar,
 } from '../components/ui';
 import { homeFor } from '../utils/policy';
-import { dateTime, money } from '../utils/format';
+import { dateTime, money, displayName, bututs } from '../utils/format';
 import { recordedVoice } from '../utils/voice';
 export function StartChat({ type, id }) {
   const action = useAction(),
@@ -77,27 +78,25 @@ function ConversationRow({ conversation: c, active }) {
       to={homeFor(user.role) + '/messages/' + c.id}
       className={'conversation-row ' + (active ? 'active' : '')}
     >
-      <span className="conversation-avatar">
-        <MessageSquare size={21} />
-      </span>
+      <Avatar person={c.counterpart} src={c.counterpart?.profileImage?.url} />
       <div>
         <strong>
-          {c.contextType === 'BOOKING'
-            ? 'Booking conversation'
-            : c.contextType === 'QUOTE'
-              ? 'Your service quote'
-              : 'Service proposal'}
+          {displayName(c.counterpart) || (user.role === 'WORKER' ? 'Customer unavailable' : 'Professional unavailable')}
         </strong>
         <p>
           {m
-            ? m.type === 'TEXT'
+            ? m.type === 'TEXT' || m.type === 'SYSTEM'
               ? m.text
+              : m.type === 'PRICE_OFFER' ? 'Price offer · ' + money(m.priceOffer?.amountBututs)
               : m.type === 'VOICE'
                 ? 'Voice message'
                 : 'Shared image'
             : 'Start the conversation'}
         </p>
-        <small>Project discussion</small>
+        <div className="conversation-meta">
+          <small>{c.serviceSummary?.name || 'Service unavailable'}</small>
+          {c.status && <Chip status={c.status} />}
+        </div>
       </div>
       {unread && (
         <span className="unread-dot" aria-label="Latest message unread" />
@@ -113,9 +112,9 @@ export function Messages() {
   return (
     <>
       <PageTitle
-        eyebrow="KEEP THE DETAILS TOGETHER"
-        title="A good conversation goes a long way."
-        description="Talk through your project with messages, photos and voice notes."
+
+        title="Messages"
+        description="Discuss the work and share photos or voice messages."
       />
       <div className={'messenger ' + (id ? 'has-conversation' : '')}>
         <aside className="conversation-sidebar">
@@ -135,7 +134,7 @@ export function Messages() {
                   <Empty
                     icon={MessageSquare}
                     title="Your next connection"
-                    description="Open a conversation from a quote, direct proposal or booking."
+                    description="Open a conversation from an offer or booking."
                   />
                 )}
                 <Pager
@@ -152,10 +151,9 @@ export function Messages() {
         ) : (
           <div className="conversation-placeholder">
             <MessageSquare size={42} />
-            <h2>A little clarity makes a big difference.</h2>
+            <h2>Choose a conversation</h2>
             <p>
-              Choose a conversation, or open one from a quote, proposal or
-              booking.
+              Choose a conversation, or open one from an offer or booking.
             </p>
             <Button to={homeFor(user.role) + '/bookings'} variant="secondary">
               Go to bookings
@@ -170,7 +168,7 @@ function Conversation({ id }) {
   const realtime = useRealtime();
   const { user } = useAuth(),
     [page, setPage] = useState(1),
-    query = useApi('/conversations/' + id),
+    query = useApi('/conversations/' + id, undefined, { refetchInterval: 60000 }),
     history = useApi(
       '/conversations/' + id + '/messages',
       { page, limit: 30 },
@@ -217,17 +215,12 @@ function Conversation({ id }) {
             >
               <ArrowLeft size={19} />
             </Link>
-            <span className="conversation-avatar">
-              <MessageSquare size={22} />
-            </span>
+            <Avatar person={c.counterpart} src={c.counterpart?.profileImage?.url} />
             <div>
               <h2>
-                {c.contextType === 'BOOKING'
-                  ? 'Your booking conversation'
-                  : c.contextType === 'QUOTE'
-                    ? 'Your quote conversation'
-                    : 'Your service proposal'}
+                {displayName(c.counterpart) || 'Your conversation'}
               </h2>
+              <p>{c.serviceSummary?.name || 'Service unavailable'} {c.status && <Chip status={c.status} />}</p>
               <p>
                 {status === 'connected' ? (
                   <>
@@ -278,7 +271,7 @@ function Conversation({ id }) {
                           }
                         >
                           <div className="message-bubble">
-                            {m.type === 'TEXT' || m.type === 'SYSTEM' ? (
+                            {m.type === 'PRICE_OFFER' ? <ChatPriceCard conversation={c} offer={m.priceOffer} /> : m.type === 'TEXT' || m.type === 'SYSTEM' ? (
                               <p>{m.text}</p>
                             ) : (
                               <ProtectedMedia
@@ -313,11 +306,47 @@ function Conversation({ id }) {
               )}
             </QueryState>
           </div>
+          {c.contextType === 'DIRECT_PROPOSAL' && ['PENDING', 'QUOTED'].includes(c.status) && <ChatPriceForm id={id} />}
           <Composer id={id} />
         </section>
       )}
     </QueryState>
   );
+}
+function ChatPriceForm({ id }) {
+  const [amount, setAmount] = useState(''), [error, setError] = useState(null), action = useAction();
+  return <form className="chat-price-form" onSubmit={async event => {
+    event.preventDefault(); setError(null);
+    try {
+      const amountBututs = bututs(amount);
+      if (amountBututs < 1) throw Error('Enter a price greater than zero.');
+      await action.mutateAsync({ path: '/conversations/' + id + '/price-offers', body: { amountBututs } });
+      setAmount('');
+    } catch (err) { setError(err); }
+  }}>
+    <Field label="Price offer · GMD" type="number" min="0.01" step="0.01" required disabled={action.isPending} value={amount} onChange={event => setAmount(event.target.value)} />
+    <Button type="submit" disabled={action.isPending}>Send price offer</Button>
+    <p className="small muted">A new offer replaces any unanswered price offer. Both sides must agree before the worker confirms the booking.</p>
+    {error && <ErrorNotice error={error} />}
+  </form>;
+}
+function ChatPriceCard({ conversation, offer }) {
+  const { user } = useAuth(), action = useAction(), [error, setError] = useState(null);
+  if (!offer) return <p>Price offer unavailable. Reload the conversation.</p>;
+  const canRespond = offer.status === 'OPEN' && offer.recipient === user.id && ['PENDING', 'QUOTED'].includes(conversation.status);
+  const offerStatus = offer.status === 'OPEN' && !['PENDING', 'QUOTED'].includes(conversation.status) ? 'CLOSED' : offer.status;
+  async function respond(decision) {
+    setError(null);
+    try { await action.mutateAsync({ path: '/conversations/' + conversation.id + '/price-offers/' + offer.id + '/respond', body: { decision } }); }
+    catch (err) { setError(err); }
+  }
+  return <div className="chat-price-card">
+    <strong>Price offer · {money(offer.amountBututs)}</strong>
+    <p>{({ OPEN: 'Waiting for a reply', ACCEPTED: 'Price agreed', DECLINED: 'Declined', REPLACED: 'Replaced by a newer offer', CLOSED: 'Proposal closed' })[offerStatus]}</p>
+    {canRespond && <div className="actions"><Button disabled={action.isPending} onClick={() => respond('ACCEPTED')}>Accept price</Button><Button variant="outline" disabled={action.isPending} onClick={() => respond('DECLINED')}>Decline price</Button></div>}
+    {offer.status === 'ACCEPTED' && <Link className="text-link" to={homeFor(user.role) + '/proposals'}>Review proposal</Link>}
+    {error && <ErrorNotice error={error} />}
+  </div>;
 }
 function ConversationContext({ conversation: c }) {
   const { user } = useAuth(), { services } = useCatalog();
@@ -327,10 +356,10 @@ function ConversationContext({ conversation: c }) {
   if (!item) return <div className="chat-context"><span>Messages discuss the work. Formal actions confirm the agreement.</span></div>;
   const bookingId = c.contextType === 'BOOKING' ? item.id : item.booking;
   return <div className="chat-context"><strong>{services.find(s => s.id === item.service)?.name || 'Your project'}</strong><span>{item.pricingMode === 'REQUEST_QUOTE' && item.status !== 'ACCEPTED'
-    ? item.quotes?.length ? 'Professional quote: ' + money(item.quotes.at(-1).amountBututs) : 'Quote requested'
-    : money(item.agreedAmountBututs ?? item.proposedAmountBututs)}</span><Chip status={item.status} />
+    ? item.quotes?.length ? 'Professional offer: ' + money(item.quotes.at(-1).amountBututs) : 'Offer requested'
+    : money(item.agreedAmountBututs ?? item.proposedAmountBututs)}</span><Chip status={c.status || item.status} />
     {item.scheduledStart && <span>{dateTime(item.scheduledStart)}</span>}
-    <Link className="text-link" to={homeFor(user.role) + (bookingId ? '/bookings/' + bookingId : c.contextType === 'DIRECT_PROPOSAL' ? '/proposals' : user.role === 'WORKER' ? '/quotes/' + item.id : '/jobs')}>{bookingId ? 'View booking' : 'Review formal terms'} →</Link>
+    <Link className="text-link" to={homeFor(user.role) + (bookingId ? '/bookings/' + bookingId : c.contextType === 'DIRECT_PROPOSAL' ? '/proposals' : user.role === 'WORKER' ? '/quotes/' + item.id : '/jobs')}>{bookingId ? 'View booking' : 'Review offer'} →</Link>
   </div>;
 }
 function Composer({ id }) {

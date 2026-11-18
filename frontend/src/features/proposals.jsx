@@ -50,18 +50,18 @@ export function ProposalCreate() {
   return (
     <>
       <PageTitle
-        eyebrow="A PLAN YOU MAKE TOGETHER"
+
         title={
           replacement
-            ? "Agree on revised terms."
-            : "Tell them what you have in mind."
+            ? "Update your request"
+            : "Send a request"
         }
-        description="Describe the work, request a quote or use a fixed listed price. Formal acceptance creates your booking."
+        description="Describe the work and ask for an offer, or use the worker's fixed price."
       />
       <QueryState query={worker}>
         {({ worker: w }) => (
           <div className="proposal-layout">
-            <Panel title="Your service proposal">
+            <Panel title="Your request">
               {!w.verificationSummary.identityVerified ? (
                 <Notice>
                   This professional is still completing SkillLink verification
@@ -87,7 +87,7 @@ export function ProposalCreate() {
                 ))}
               </div>
               <Notice>
-                Messages help you discuss the work. Only formal acceptance records
+                Discuss the work in messages. Accepting the offer records
                 the agreed price and creates a booking.
               </Notice>
             </Panel>
@@ -164,9 +164,9 @@ function ProposalForm({ worker, workerId, previous }) {
     <form className="form-stack proposal-form" onSubmit={save}>
       {previous && (
         <Notice>
-          Sending revised terms cancels your pending invitation first. The
-          professional must accept the new price and schedule. If sending fails
-          after cancellation, the old invitation stays cancelled and you can
+          To agree a different price, send a price offer in chat. Changing the work
+          or schedule closes the current request before sending a new one. If sending fails,
+          the old request stays closed and you can
           retry here.
         </Notice>
       )}
@@ -206,7 +206,7 @@ function ProposalForm({ worker, workerId, previous }) {
           <Button variant="text" onClick={() => setExistingPhotos(ids => ids.filter(x => x !== id))}>Remove photo</Button></div>)}
         <FileUpload purpose="JOB_ATTACHMENT" multiple max={5 - existingPhotos.length} onChange={setAttachments}
           onBusyChange={setUploading} label="Add photos (optional)" preview />
-        <small>Photos can help the professional understand the work and provide a more accurate quote. Up to five photos.</small>
+        <small>Photos can help the professional understand the work and provide a more accurate offer. Up to five photos.</small>
       </fieldset>
       <fieldset>
         <legend>2. Where is the job?</legend>
@@ -264,7 +264,7 @@ function ProposalForm({ worker, workerId, previous }) {
           {listed.type === 'HOURLY' && <p>This is an hourly rate. Agree a total with the professional before booking. Hours are not automatically tracked or billed.</p>}
         </Notice>}
         <label className="pricing-choice"><input type="radio" name="pricingChoice" checked={pricingMode === 'REQUEST_QUOTE'} onChange={() => setMode('REQUEST_QUOTE')} />
-          <span><strong>Request a quote</strong><small>Let the professional review your job and suggest a price.</small></span></label>
+          <span><strong>Ask for an offer</strong><small>The worker reviews the work and suggests a price.</small></span></label>
         {canUseListed && <label className="pricing-choice"><input type="radio" name="pricingChoice" checked={pricingMode === 'LISTED_PRICE'} onChange={() => setMode('LISTED_PRICE')} />
           <span><strong>Use listed price · {money(listed.amountBututs)} fixed</strong><small>The professional confirms the work and schedule before a booking is created.</small></span></label>}
         {pricingMode === 'REQUEST_QUOTE' && <>
@@ -272,7 +272,7 @@ function ProposalForm({ worker, workerId, previous }) {
           {hasBudget && <><div className="two-grid">
             <Field label="Minimum · GMD" name="budgetMin" type="number" min="0.01" step="0.01" required defaultValue={previous?.budget ? gmdInput(previous.budget.minAmountBututs) : ''} />
             <Field label="Maximum · GMD" name="budgetMax" type="number" min="0.01" step="0.01" required defaultValue={previous?.budget ? gmdInput(previous.budget.maxAmountBututs) : ''} />
-          </div><small>This is a budget guide, not the professional’s final quote.</small></>}
+          </div><small>This is a budget guide, not the professional’s final offer.</small></>}
         </>}
       </fieldset>
       {error && <ErrorNotice error={error} />}
@@ -280,8 +280,8 @@ function ProposalForm({ worker, workerId, previous }) {
         {action.isPending
           ? "Sending…"
           : previous
-            ? "Cancel old & send revised proposal"
-            : "Send service proposal"}
+            ? "Send updated request"
+            : "Send request"}
       </Button>
     </form>
   );
@@ -299,13 +299,13 @@ export function Proposals() {
   return (
     <>
       <PageTitle
-        eyebrow="MAKE A PLAN TOGETHER"
+
         title={
           user.role === "WORKER"
-            ? "Your direct invitations."
-            : "Your service proposals."
+            ? "Offers received"
+            : "Offers"
         }
-        description="Messages help you discuss. Formal proposal actions confirm your agreement."
+        description="Review prices, agree changes in messages, then accept an offer."
       />
       <QueryState query={query}>
         {(data) => (
@@ -318,7 +318,7 @@ export function Proposals() {
               </div>
             ) : (
               <Empty
-                title="A new connection starts with an invitation"
+                title="No offers yet"
                 action={
                   <Button
                     to={
@@ -384,13 +384,13 @@ function ProposalCard({ proposal: p }) {
         {dateTime(p.scheduledStart)} – {dateTime(p.scheduledEnd)}
       </p>
       <strong className="quote-price">{p.status === 'ACCEPTED' ? money(p.agreedAmountBututs)
-        : quoteRequest ? quote ? money(quote.amountBututs) : 'Quote requested' : money(p.agreedAmountBututs)}</strong>
-      {quoteRequest && <p className="small muted">{p.status === 'ACCEPTED' ? 'Agreed booking price' : quote ? 'Professional quote' : 'Waiting for professional quote'}</p>}
+        : quoteRequest ? quote ? money(quote.amountBututs) : 'Offer requested' : money(p.agreedAmountBututs)}</strong>
+      {quoteRequest && <p className="small muted">{p.status === 'ACCEPTED' ? 'Agreed booking price' : quote ? 'Professional offer' : 'Waiting for professional offer'}</p>}
       {p.budget && <Notice>Customer budget: {money(p.budget.minAmountBututs)} – {money(p.budget.maxAmountBututs)}. This is a guide, not an agreed price.</Notice>}
-      {quote && <><p className="prose">{quote.note}</p><p className="small muted">Quote valid until {dateTime(quote.expiresAt)}{!quoteValid && open ? ' · Expired — request a revised quote' : ''}</p></>}
+      {quote && <><p className="prose">{quote.note}</p><p className="small muted">Offer valid until {dateTime(quote.expiresAt)}{!quoteValid && open ? ' · Expired — request a revised offer' : ''}</p></>}
       {p.attachments?.length > 0 && <div className="media-grid">{p.attachments.map(id => <ProtectedMedia key={id}
         path={'/direct-proposals/' + p.id + '/attachments/' + id + '/access'} alt="Job photo" />)}</div>}
-      {p.quotes?.length > 1 && <details><summary>Previous quotes</summary>{p.quotes.slice(0, -1).map(q => <p key={q.revision}>{money(q.amountBututs)} · {q.note} · Superseded</p>)}</details>}
+      {p.quotes?.length > 1 && <details><summary>Previous offers</summary>{p.quotes.slice(0, -1).map(q => <p key={q.revision}>{money(q.amountBututs)} · {q.note} · Superseded</p>)}</details>}
       {!p.booking && (
         <p className="small muted">
           Exact job location becomes available after the booking is confirmed.
@@ -398,11 +398,11 @@ function ProposalCard({ proposal: p }) {
       )}
       {open && (
         <Notice>
-          {quoteRequest ? worker ? 'Review the work and send a formal quote. Chat messages do not set the booking price.'
-            : quote ? 'Review the formal quote and accept it to create your booking. Chat messages do not accept a price.'
-              : 'Waiting for the professional to assess the work and send a quote.' : worker
-            ? "Accept these terms to create a booking. To suggest a different price, message the customer and ask them to send revised terms."
-            : "Awaiting the professional’s formal acceptance. A chat agreement does not change this price."}
+          {quoteRequest ? worker ? 'Review the work and send an offer. You can also send a price offer in chat.'
+            : quote ? 'Review this offer, or agree a different amount using a price offer in chat.'
+              : 'Waiting for the worker to review the work and send an offer.' : worker
+            ? "Confirm these terms to create a booking, or send a price offer in chat."
+            : "Waiting for the worker to confirm. You can agree a different amount using a price offer in chat."}
         </Notice>
       )}
       <div className="actions">
@@ -411,24 +411,24 @@ function ProposalCard({ proposal: p }) {
           <Button to={base + "/bookings/" + p.booking}>View booking</Button>
         )}
         {open && quoteRequest && worker && <Command
-          label={quote ? 'Revise quote' : 'Send quote'} path={'/direct-proposals/' + p.id + '/quote'}
+          label={quote ? 'Revise offer' : 'Send offer'} path={'/direct-proposals/' + p.id + '/quote'}
           initial={quote ? { amount: gmdInput(quote.amountBututs), note: quote.note } : undefined}
-          fields={[{ name: 'amount', label: 'Quote amount · GMD', type: 'number', min: '0.01', step: '0.01', required: true },
+          fields={[{ name: 'amount', label: 'Offer amount · GMD', type: 'number', min: '0.01', step: '0.01', required: true },
             { name: 'note', label: 'What is included? (optional)', as: 'textarea', maxLength: 2000 }]}
           build={v => ({ amountBututs: bututs(v.amount), note: v.note || '', revision: p.quoteRevision })}
-          description="State the total for this work. Explain whether labour, materials and transport are included. A revised quote replaces the previous offer until the customer accepts."
+          description="State the total for this work. Explain whether labour, materials and transport are included. A revised offer replaces the previous offer until the customer accepts."
         />}
         {open && quoteRequest && !worker && p.status === 'QUOTED' && <>
-          {quoteValid && <Command label="Accept quote" path={'/direct-proposals/' + p.id + '/accept-quote'}
+          {quoteValid && <Command label="Accept offer" path={'/direct-proposals/' + p.id + '/accept-quote'}
             body={{ revision: quote.revision }} description={'Accept ' + money(quote.amountBututs) + ' and create your booking? Availability is checked now.'}
             onSuccess={data => navigate(base + '/bookings/' + data.proposal.booking)} />}
-          <Command label="Decline quote" path={'/direct-proposals/' + p.id + '/decline-quote'} description="Decline this quote and close the request?" variant="outline" />
+          <Command label="Decline offer" path={'/direct-proposals/' + p.id + '/decline-quote'} description="Decline this offer and close the request?" variant="outline" />
         </>}
         {open &&
           (worker ? (
             <>
               {!quoteRequest && <Command
-                label="Accept proposal"
+                label="Accept offer"
                 path={"/direct-proposals/" + p.id + "/accept"}
                 description={
                   "Accept " +
@@ -455,10 +455,10 @@ function ProposalCard({ proposal: p }) {
                   "/app/proposals/new?worker=" + p.worker + "&replace=" + p.id
                 }
               >
-                Revise proposal
+                Change work or schedule
               </Button>
               <Command
-                label="Cancel proposal"
+                label="Cancel offer"
                 path={"/direct-proposals/" + p.id + "/cancel"}
                 variant="outline"
                 description="Cancel this pending invitation?"

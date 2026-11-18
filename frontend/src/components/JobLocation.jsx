@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { MapPin } from "lucide-react";
 import { Button } from "./ui";
+const LocationMap = lazy(() => import('./LocationMap'));
 
 export function JobLocation({ value, onChange, mode = "job" }) {
   const [busy, setBusy] = useState(false),
@@ -41,15 +42,25 @@ export function JobLocation({ value, onChange, mode = "job" }) {
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
     );
   }
+  function movePin(point) {
+    request.current++;
+    setBusy(false);
+    setMessage('');
+    onChange(point);
+  }
   return (
     <div className="job-location">
       <p className="muted">
         {mode === "job"
-          ? "Optional: share your current position only if you are at the job site. Otherwise, enter the town and address above."
+          ? "Optional: tap the map to place a pin at the job site, or drag the pin to the right place."
           : mode === "base"
             ? "Optionally use your current position as your private work base to improve nearby matching."
             : "Optionally use your current position to find nearby professionals."}
       </p>
+      {mode === 'job' && <>
+        <Suspense fallback={<p className="muted" role="status">Loading map…</p>}><LocationMap value={value} onChange={movePin} /></Suspense>
+        <small>Use the arrow keys to move the map, then press Enter to place the pin. Use your current location only when you are at the job site.</small>
+      </>}
       {value && (
         <p className="success-text" role="status">
           {mode === "job" ? "Precise job location added." : "Location added."}
@@ -65,7 +76,7 @@ export function JobLocation({ value, onChange, mode = "job" }) {
           <MapPin size={16} />
           {busy
             ? "Finding your location…"
-            : value
+            : value && mode !== 'job'
               ? "Change location"
               : "Use my current location"}
         </Button>
@@ -101,11 +112,12 @@ export function JobLocationLink({ location }) {
   const [longitude, latitude] = location.coordinates;
   if (!Number.isFinite(longitude) || !Number.isFinite(latitude)) return null;
   return (
+    <div className="booking-location-map">
+    <Suspense fallback={<p className="muted" role="status">Loading map…</p>}><LocationMap value={location} readOnly /></Suspense>
     <a
       className="button outline"
       href={
-        "https://www.google.com/maps/search/?api=1&query=" +
-        encodeURIComponent(latitude + "," + longitude)
+        'https://www.openstreetmap.org/?mlat=' + latitude + '&mlon=' + longitude + '#map=16/' + latitude + '/' + longitude
       }
       target="_blank"
       rel="noopener noreferrer"
@@ -114,5 +126,6 @@ export function JobLocationLink({ location }) {
       <MapPin size={16} />
       View job location
     </a>
+    </div>
   );
 }

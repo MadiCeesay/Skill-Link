@@ -47,7 +47,7 @@ describe('Integer GMD display and input', () => {
     expect(pricing({ type: 'HOURLY', amountBututs: 15000 })).toBe(
       'GMD 150.00 / hour',
     );
-    expect(pricing({ type: 'QUOTE_REQUIRED' })).toBe('Quote on request');
+    expect(pricing({ type: 'QUOTE_REQUIRED' })).toBe('Ask for an offer');
     expect(
       budget({ type: 'RANGE', minAmountBututs: 10000, maxAmountBututs: 25000 }),
     ).toBe('GMD 100.00 – GMD 250.00');

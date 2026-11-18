@@ -6,6 +6,16 @@ let current = null,
   refreshing = null,
   epoch = 0;
 const listeners = new Set();
+const storageKey = 'skilllink.refreshToken';
+function storedRefreshToken() {
+  try { return localStorage.getItem(storageKey); } catch { return null; }
+}
+function persistRefreshToken(token) {
+  try {
+    if (token) localStorage.setItem(storageKey, token);
+    else localStorage.removeItem(storageKey);
+  } catch { /* Storage-disabled browsers retain an in-memory session. */ }
+}
 export class ApiError extends Error {
   constructor(status, code, message, details) {
     super(message);
@@ -16,19 +26,26 @@ export class ApiError extends Error {
 }
 export const session = {
   get: () => current,
+  hasStoredToken: () => !!storedRefreshToken(),
   subscribe: (fn) => {
     listeners.add(fn);
     return () => listeners.delete(fn);
   },
-  set(value) {
+  set(value, { persist = true } = {}) {
     epoch++;
     current = value;
+    if (persist) persistRefreshToken(value?.refreshToken);
     listeners.forEach((fn) => fn());
   },
   clear() {
     this.set(null);
   },
 };
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (event) => {
+    if ((event.key === storageKey || event.key === null) && !storedRefreshToken()) session.clear();
+  });
+}
 async function decode(response) {
   const body = await response.json().catch(() => ({}));
   const retryAfter = Number(response.headers.get('Retry-After'));
@@ -62,12 +79,14 @@ function respectCooldown() {
 }
 export async function refreshSession() {
   if (refreshing) return refreshing;
-  const original = epoch,
-    token = current?.refreshToken;
-  if (!token)
+  const original = epoch;
+  if (!(current?.refreshToken || storedRefreshToken()))
     throw new ApiError(401, 'SESSION_EXPIRED', 'Please sign in to continue.');
-  refreshing = (async () => {
+  const rotate = async () => {
     try {
+      if (epoch !== original) throw new ApiError(401, 'SESSION_CHANGED', 'Your session changed. Please sign in again.');
+      // Other tabs may have rotated while this tab waited for the browser lock.
+      const token = storedRefreshToken() || current?.refreshToken;
       respectCooldown();
       const data = await decode(
         await fetch(API_URL + '/auth/refresh', {
@@ -85,13 +104,32 @@ export async function refreshSession() {
       session.set({ ...current, ...data });
       return current;
     } catch (error) {
-      if (epoch === original && error.status !== 429) session.clear();
+      if (epoch === original) session.clear();
       throw error;
-    } finally {
-      refreshing = null;
     }
-  })();
+  };
+  refreshing = (globalThis.navigator?.locks
+    ? navigator.locks.request('skilllink.refresh', rotate)
+    : rotate()).finally(() => { refreshing = null; });
   return refreshing;
+}
+let restoring = null;
+export function restoreSession() {
+  if (restoring) return restoring;
+  if (current?.user || !storedRefreshToken()) return Promise.resolve();
+  restoring = (async () => {
+    try {
+      await refreshSession();
+      const original = epoch;
+      const { user } = await api('/auth/me', { retry: false });
+      // User loading must not overwrite a token another tab just rotated.
+      if (epoch === original) session.set({ ...current, user }, { persist: false });
+    } catch {
+      // refreshSession clears failed refreshes; /me failures also discard tokens.
+      if (!current?.user) session.clear();
+    } finally { restoring = null; }
+  })();
+  return restoring;
 }
 export async function api(
   path,

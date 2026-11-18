@@ -59,18 +59,25 @@ export const title = (value) =>
     .toLowerCase()
     .replaceAll('_', ' ')
     .replace(/\b\w/g, (c) => c.toUpperCase());
+export const paymentEventLabel = value => ({
+  CUSTOMER_PAYMENT: 'Payment received',
+  PLATFORM_FEE: 'Platform fee',
+  WORKER_PENDING_EARNING: 'Worker payment pending',
+  WORKER_RELEASE: 'Payment released to worker',
+  REFUND: 'Payment refunded',
+})[value] || title(value);
 export const statusLabel = (value) =>
   ({
     AWAITING_PAYMENT: 'Payment required',
     PENDING: 'Pending',
     WORKER_MARKED_COMPLETED: 'Awaiting your confirmation',
-    HELD: 'Held · simulated',
-    QUOTE_ACCEPTED: 'Quote accepted',
-    QUOTED: 'Quote received',
+    HELD: 'Held',
+    QUOTE_ACCEPTED: 'Offer accepted',
+    QUOTED: 'Offer received',
     NOT_SUBMITTED: 'Not submitted',
   })[value] || title(value);
 export function pricing(p) {
-  if (!p || p.type === 'QUOTE_REQUIRED') return 'Quote on request';
+  if (!p || p.type === 'QUOTE_REQUIRED') return 'Ask for an offer';
   return (
     (p.type === 'STARTING_FROM' ? 'From ' : '') +
     money(p.amountBututs) +
@@ -79,7 +86,7 @@ export function pricing(p) {
 }
 export const budget = (b) =>
   !b || b.type === 'OPEN_TO_QUOTES'
-    ? 'Open to quotes'
+    ? 'Open to offers'
     : b.type === 'RANGE'
       ? money(b.minAmountBututs) + ' – ' + money(b.maxAmountBututs)
       : money(b.amountBututs);

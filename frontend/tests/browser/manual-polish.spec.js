@@ -87,7 +87,7 @@ test("precise location is opt-in; revised formal terms create one private, payab
       r.url().endsWith("/api/direct-proposals") &&
       r.request().method() === "POST",
   );
-  await page.getByRole("button", { name: "Send service proposal" }).click();
+  await page.getByRole("button", { name: "Send request" }).click();
   const first = (await (await sent).json()).data.proposal;
   expect(first.location.coordinates).toEqual([-16.65, 13.27]);
   const workerHeaders = { Authorization: "Bearer " + worker.accessToken };
@@ -129,7 +129,7 @@ test("precise location is opt-in; revised formal terms create one private, payab
       r.request().method() === "POST",
   );
   await page
-    .getByRole("button", { name: "Cancel old & send revised proposal" })
+    .getByRole("button", { name: "Send updated request" })
     .click();
   const replacement = (await (await revised).json()).data.proposal;
   expect(replacement.agreedAmountBututs).toBeUndefined();
@@ -145,19 +145,19 @@ test("precise location is opt-in; revised formal terms create one private, payab
   await login(page, "professional@example.test");
   await navigate(page, "/work/proposals");
   await page
-    .getByRole("button", { name: "Send quote", exact: true })
+    .getByRole("button", { name: "Send offer", exact: true })
     .first()
     .click();
-  await page.getByLabel('Quote amount · GMD').fill('650');
+  await page.getByLabel("Offer amount · GMD").fill('650');
   await page
     .getByRole("dialog")
-    .getByRole("button", { name: "Send quote", exact: true })
+    .getByRole("button", { name: "Send offer", exact: true })
     .click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await login(page, 'customer@example.test');
   await navigate(page, '/app/proposals');
-  await page.getByRole('button', { name: 'Accept quote', exact: true }).first().click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Accept quote', exact: true }).click();
+  await page.getByRole('button', { name: "Accept offer", exact: true }).first().click();
+  await page.getByRole('dialog').getByRole('button', { name: "Accept offer", exact: true }).click();
   await expect(page).toHaveURL(/\/app\/bookings\/[a-f0-9]{24}$/);
   const bookingId = page.url().split("/").at(-1);
   await login(page, 'professional@example.test');
@@ -188,7 +188,7 @@ test("precise location is opt-in; revised formal terms create one private, payab
 
 for (const mode of ["denied", "unavailable", "removed"])
   test(
-    "location " + mode + " never blocks a town-only proposal",
+    "location " + mode + " never blocks a town-only offer",
     async ({ page, context, request }) => {
       const worker = await prepare(request);
       await context.addInitScript((mode) => {
@@ -219,7 +219,7 @@ for (const mode of ["denied", "unavailable", "removed"])
           r.url().endsWith("/api/direct-proposals") &&
           r.request().method() === "POST",
       );
-      await page.getByRole("button", { name: "Send service proposal" }).click();
+      await page.getByRole("button", { name: "Send request" }).click();
       const response = await sent;
       expect(response.ok()).toBeTruthy();
       expect((await response.json()).data.proposal).not.toHaveProperty(
@@ -257,7 +257,7 @@ test("multiple service areas can be managed without accidental duplicates", asyn
   ).toBeVisible();
 });
 
-test("proposal form, location controls and proposal navigation fit phone through desktop", async ({
+test("offer form, location controls and offer navigation fit phone through desktop", async ({
   page,
   request,
 }) => {
@@ -281,7 +281,7 @@ test("proposal form, location controls and proposal navigation fit phone through
     });
     await navigate(page, "/app/proposals");
     await expect(
-      page.getByRole("heading", { name: "Your service proposals." }),
+      page.getByRole("heading", { name: "Offers" }),
     ).toBeVisible();
     expect(
       await page.evaluate(

@@ -23,6 +23,7 @@ npm-debug.log*
 
 # Local integration/demo credentials
 .local-integration/
+backend/seed-assets/*/
 
 # OS / editor
 .DS_Store

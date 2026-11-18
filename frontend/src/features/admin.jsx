@@ -26,12 +26,14 @@ import {
   DataTable,
   Command,
   Notice,
+  PaymentDemoLabel,
   MediaLink,
   ProtectedMedia,
   Reference,
   Avatar,
+  Field,
 } from '../components/ui';
-import { money, dateTime, date, shortId, title, displayName } from '../utils/format';
+import { money, dateTime, date, shortId, title, displayName, paymentEventLabel } from '../utils/format';
 function FinancialCustomer({ record }) {
   return <div><strong>{displayName(record.customerSummary) || 'Customer unavailable'}</strong>
     <div className="small muted"><Link to={'/admin/bookings/' + record.booking}>Booking · {shortId(record.booking)}</Link></div>
@@ -42,15 +44,35 @@ export function AdminDashboard() {
 }
 export function AdminUsers() {
   const [page, setPage] = useState(1),
-    query = useApi('/admin/users', { page, limit: 15 });
+    [search, setSearch] = useState(''),
+    [filters, setFilters] = useState({ q: '', role: '' }),
+    query = useApi('/admin/users', { page, limit: 15, ...(filters.q ? { q: filters.q } : {}), ...(filters.role ? { role: filters.role } : {}) });
   return (
     <>
       <PageTitle
-        eyebrow="THE PEOPLE BEHIND THE MARKETPLACE"
-        title="Accounts & professionals."
-        description="Inspect account status. Sensitive changes are confirmed, audited and revoke existing sessions."
+
+        title="People"
+        description="View users and change account status."
       />
       <Panel>
+        <form className="people-filters" onSubmit={event => {
+          event.preventDefault();
+          setFilters(current => ({ ...current, q: search.trim().replace(/\s+/g, ' ') }));
+          setPage(1);
+        }}>
+          <Field label="Search by name" type="search" maxLength={100} value={search} onChange={event => setSearch(event.target.value)} />
+          <Field label="Role" as="select" value={filters.role} onChange={event => {
+            setFilters(current => ({ ...current, role: event.target.value }));
+            setPage(1);
+          }}>
+            <option value="">All roles</option>
+            <option value="CUSTOMER">Customers</option>
+            <option value="WORKER">Workers</option>
+            <option value="ADMIN">Admins</option>
+          </Field>
+          <Button type="submit">Search</Button>
+          {(filters.q || filters.role) && <Button type="button" variant="outline" onClick={() => { setSearch(''); setFilters({ q: '', role: '' }); setPage(1); }}>Clear filters</Button>}
+        </form>
         <QueryState query={query}>
           {(data) => (
             <>
@@ -123,7 +145,7 @@ export function AdminUsers() {
                                     : 'ACTIVE',
                                 reason: v.reason,
                               })}
-                              description="This action is audited and revokes existing sessions. Reactivated users must sign in again."
+                              description="Changing status signs the user out. Reactivated users must sign in again."
                             />
                           )}
                         </div>
@@ -132,7 +154,7 @@ export function AdminUsers() {
                   ]}
                 />
               ) : (
-                <Empty title="No accounts to display" />
+                <Empty title={filters.q || filters.role ? 'No people match your search' : 'No accounts to display'} description={filters.q || filters.role ? 'Try another name or choose a different role.' : undefined} />
               )}
               <Pager
                 pagination={data.pagination}
@@ -151,7 +173,7 @@ export function AdminWorker() {
     query = useApi('/admin/workers/' + id);
   return (
     <>
-      <PageTitle title="Professional account review." />
+      <PageTitle title="Worker account" />
       <QueryState query={query}>
         {({ account, profile: p }) => (
           <div className="two-grid">
@@ -206,8 +228,8 @@ export function AdminVerifications() {
   return (
     <>
       <PageTitle
-        eyebrow="EVIDENCE, REVIEWED WITH CARE"
-        title="Build trust. One profile at a time."
+
+        title="Worker identity checks"
         description="Only pending applications can be approved or rejected."
       />
       <Panel title="Verification queue">
@@ -274,9 +296,9 @@ export function VerificationReview() {
   return (
     <>
       <PageTitle
-        eyebrow="PRIVATE VERIFICATION WORKSPACE"
-        title="A considered review builds real trust."
-        description="Identity documents and private notes belong only in this authorized workspace."
+
+        title="Review worker identity"
+        description="Check the documents and record your decision."
       />
       <QueryState query={query}>
         {({ verification: v }) => (
@@ -447,9 +469,9 @@ export function AdminCatalog() {
   return (
     <>
       <PageTitle
-        eyebrow="THE MARKETPLACE CATALOG"
-        title="The services that bring us together."
-        description="Manage catalog entries without deleting references from existing work."
+
+        title="Services"
+        description="Add or update services and categories."
       >
         <Command
           label={'Add ' + (service ? 'service' : 'category')}
@@ -521,7 +543,7 @@ export function AdminCatalog() {
                               body={{ isActive: !r.isActive }}
                               description={
                                 r.isActive
-                                  ? 'Deactivate this catalog entry? Existing references are retained, but it will no longer be advertised.'
+                                  ? 'Hide this service from search? Existing bookings will keep their details.'
                                   : 'Activate this entry under an active category?'
                               }
                             />
@@ -557,46 +579,41 @@ export function AdminRecords() {
     query = useApi('/admin/' + kind, { page, limit: 15 });
   const headings = {
     bookings: [
-      'Every booking. A clear picture.',
-      'Schedules, status and commercial references.',
+      'Bookings',
+      'Check booking times, people and status.',
     ],
     payments: [
-      'Simulated payments, clearly accounted for.',
-      'Read-only inspection. No actual money is held or transferred.',
+      'Payments',
+      'Check payment amounts and status.',
     ],
     ledger: [
-      'A traceable record of simulated funds.',
-      'Financial events are immutable through the application.',
+      'Payment history',
+      'View payment records.',
     ],
     disputes: [
-      'Give every issue a considered review.',
-      'Inspect the work, the context and the held simulated payment.',
+      'Reported problems',
+      'Check the work and payment before deciding.',
     ],
     reviews: [
-      'Genuine feedback. Thoughtful moderation.',
+      'Reviews',
       'Hide or restore content without changing a customer’s rating.',
     ],
   };
   return (
     <>
       <PageTitle
-        eyebrow="SKILLLINK OPERATIONS"
+
         title={headings[kind]?.[0]}
         description={headings[kind]?.[1]}
       >
         {kind === 'payments' && (
           <Button to="/admin/ledger" variant="outline">
-            View ledger
+            Payment history
             <ArrowUpRight size={16} />
           </Button>
         )}
       </PageTitle>
-      {['payments', 'ledger'].includes(kind) && (
-        <Notice>
-          All values are simulated. This is not a bank balance, real payment
-          gateway or regulated escrow.
-        </Notice>
-      )}
+      {['payments', 'ledger'].includes(kind) && <PaymentDemoLabel />}
       <Panel>
         <QueryState query={query}>
           {(data) => {
@@ -654,14 +671,14 @@ export function AdminRecords() {
                             to={'/admin/payments/' + p.id}
                             variant="outline"
                           >
-                            View ledger
+                            Payment history
                           </Button>
                         ),
                       },
                     ]
                   : kind === 'ledger'
                     ? [
-                        { label: 'Event', render: (e) => title(e.type) },
+                        { label: 'Event', render: (e) => paymentEventLabel(e.type) },
                         {
                           label: 'Customer / booking',
                           render: (e) => <FinancialCustomer record={e} />,
@@ -749,7 +766,7 @@ export function AdminRecords() {
                                       : 'VISIBLE',
                                   reason: v.reason,
                                 })}
-                                description="Change visibility? The customer’s rating is retained and reputation counters are recalculated."
+                                description="Change whether this review is shown? The rating itself will stay the same."
                               />
                             ),
                           },
@@ -785,13 +802,13 @@ export function AdminRecord() {
   return (
     <>
       <PageTitle
-        eyebrow="AUTHORIZED OPERATIONS WORKSPACE"
+
         title={
           kind === 'disputes'
-            ? 'A fair resolution starts with context.'
+            ? 'Review reported problem'
             : kind === 'payments'
-              ? 'Follow the simulated funds.'
-              : 'The booking, in detail.'
+              ? 'Payment details'
+              : 'Booking details'
         }
       />
       <QueryState query={query}>
@@ -799,7 +816,7 @@ export function AdminRecord() {
           kind === 'payments' ? (
             <div className="two-grid">
               <Panel
-                title="Simulated payment"
+                title="Payment"
                 action={<Chip status={data.payment.status} />}
               >
                 <dl className="details">
@@ -823,13 +840,13 @@ export function AdminRecord() {
                   id={data.payment.booking}
                   to={'/admin/bookings/' + data.payment.booking}
                 />
-                <Notice>No actual funds were moved.</Notice>
+                <PaymentDemoLabel />
               </Panel>
-              <Panel title="Ledger events">
+              <Panel title="Payment history">
                 {data.entries.map((e) => (
                   <div className="list-row" key={e.id}>
                     <div>
-                      <strong>{title(e.type)}</strong>
+                      <strong>{paymentEventLabel(e.type)}</strong>
                       <p className="small muted">{dateTime(e.createdAt)}</p>
                     </div>
                     <strong>{money(e.amountBututs)}</strong>
@@ -880,10 +897,10 @@ function AdminBooking({ booking: b }) {
         to={'/admin/workers/' + b.worker}
       />
       <Reference label="Customer" id={b.customer} />
-      {b.jobRequest && <Reference label="Job request" id={b.jobRequest} />}{' '}
+      {b.jobRequest && <Reference label="Request" id={b.jobRequest} />}{' '}
       {b.payment && (
         <Button to={'/admin/payments/' + b.payment} variant="outline">
-          Inspect payment & ledger
+          Payment details
         </Button>
       )}
       {b.completionNotes && <p>{b.completionNotes}</p>}
@@ -903,6 +920,7 @@ function AdminDispute({ dispute: d }) {
   return (
     <div className="two-grid">
       <Panel title={d.reason} action={<Chip status={d.status} />}>
+        <PaymentDemoLabel />
         <p className="prose">{d.description}</p>
         <Reference
           label="Booking"
@@ -919,12 +937,11 @@ function AdminDispute({ dispute: d }) {
           ))}
         </div>
       </Panel>
-      <Panel title="A consistent resolution">
+      <Panel title="Your decision">
         {d.status === 'OPEN' ? (
           <>
             <Notice>
-              Your decision updates the booking, simulated payment, ledger and
-              audit record in one transaction.
+              Your decision updates the booking and payment. The reason is saved.
             </Notice>
             {[
               ['RELEASE_TO_WORKER', 'Release to professional'],
@@ -948,7 +965,7 @@ function AdminDispute({ dispute: d }) {
                 description={
                   'Confirm this resolution: ' +
                   label.toLowerCase() +
-                  '. This closes the dispute and settles the simulated funds.'
+                  '. This closes the dispute and settles the payment.'
                 }
               />
             ))}
@@ -974,24 +991,14 @@ export function AdminGap() {
   return (
     <>
       <PageTitle
-        eyebrow="AN HONEST VIEW OF THE PLATFORM"
-        title={
-          audit
-            ? 'A record behind every decision.'
-            : 'Job activity, in context.'
-        }
+        title={audit ? 'Admin activity' : 'Requests'}
         description={
           audit
-            ? 'Sensitive administrative changes are recorded on the server.'
-            : 'The current API exposes job counts and booking relationships.'
+            ? 'Review decisions about users, workers and bookings.'
+            : 'Request totals across all customers.'
         }
       />
-      <Panel title={audit ? 'Audit information' : 'Job request overview'}>
-        <Notice>
-          {audit
-            ? 'An audit-event listing endpoint is not available. This workspace does not fabricate an audit log.'
-            : 'An administrator-wide JobRequest listing endpoint is not available. We won’t request customer-only job views as an administrator.'}
-        </Notice>
+      <Panel title={audit ? 'Review decisions' : 'Request totals'}>
         {!audit && (
           <QueryState query={metrics}>
             {(m) => (
@@ -1002,7 +1009,7 @@ export function AdminGap() {
                   icon={BriefcaseBusiness}
                 />
                 <Stat
-                  label="Accepted requests"
+                  label="Requests with an accepted offer"
                   value={m.acceptedJobs}
                   icon={CheckCircle2}
                 />
@@ -1012,8 +1019,8 @@ export function AdminGap() {
         )}
         <p className="prose">
           {audit
-            ? 'Verification decisions, dispute resolutions, account status changes, catalog edits and review moderation are audited. Review context, reasons and timestamps are displayed on their supported resource pages. A future audit-list API can connect here without weakening access controls.'
-            : 'Inspect bookings for their JobRequest and accepted-quote references. A future administrator job-list endpoint can provide a full operations queue here.'}
+            ? 'Open a dispute or worker identity check to see the decision, reason and date.'
+            : 'These totals cover all customers. An accepted request stays in the total after its booking ends. Private offers and archived bookings are not included.'}
         </p>
         <div className="actions">
           <Button to={audit ? '/admin/disputes' : '/admin/bookings'}>

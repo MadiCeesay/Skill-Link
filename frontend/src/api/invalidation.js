@@ -5,7 +5,7 @@ export function affectedPaths(path) {
   if (path.startsWith('/notifications/')) return common;
   if (path.startsWith('/conversations/')) {
     const match = path.match(/^\/conversations\/([^/]+)/);
-    return [...common, '/conversations/me', ...(match ? ['/conversations/' + match[1]] : [])];
+    return [...common, '/conversations/me', ...(path.includes('/price-offers') ? ['/direct-proposals'] : []), ...(match ? ['/conversations/' + match[1]] : [])];
   }
   if (/^\/(categories|services)(\/|$)/.test(path)) return [...common, '/admin/catalog/', '/admin/metrics', '/workers'];
   if (path.startsWith('/admin/')) return [...common, '/admin/' + path.split('/')[2], '/admin/metrics'];

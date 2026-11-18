@@ -3,13 +3,20 @@ import {
   useContext,
   useSyncExternalStore,
   useEffect,
+  useState,
 } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { api, session } from './client';
+import { api, session, restoreSession } from './client';
 import { homeFor } from '../utils/policy';
 const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
+  const [ready, setReady] = useState(() => !!session.get()?.user || !session.hasStoredToken());
+  useEffect(() => {
+    let mounted = true;
+    restoreSession().finally(() => { if (mounted) setReady(true); });
+    return () => { mounted = false; };
+  }, []);
   const value = useSyncExternalStore(
       session.subscribe,
       session.get,
@@ -37,7 +44,7 @@ export function AuthProvider({ children }) {
     <AuthContext.Provider
       value={{ user: value?.user, token: value?.accessToken, login, logout }}
     >
-      {children}
+      {ready ? children : <p role="status">Restoring your session…</p>}
     </AuthContext.Provider>
   );
 }

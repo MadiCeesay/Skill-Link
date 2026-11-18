@@ -112,10 +112,11 @@ export function Badge({ children = 'Identity verified' }) {
   );
 }
 export function Avatar({ person, size = 'medium', src }) {
+  const [failedSrc, setFailedSrc] = useState(null);
   return (
     <span className={'avatar ' + size}>
-      {src ? (
-        <img src={src} alt="" loading="lazy" referrerPolicy="no-referrer" />
+      {src && src !== failedSrc ? (
+        <img src={src} alt="" loading="lazy" referrerPolicy="no-referrer" onError={() => setFailedSrc(src)} />
       ) : (
         (displayName(person) || 'SkillLink')
           .split(' ')
@@ -251,7 +252,9 @@ export function Field({
   ...props
 }) {
   const id = useId(),
-    Tag = as;
+    Tag = as,
+    currencyAmount = props.type === 'number' && String(props.step) === '0.01',
+    fieldHint = hint || (currencyAmount ? 'Enter GMD with at most two decimal places, for example 500 or 499.79.' : undefined);
   return (
     <div
       className={'field ' + (props.type === 'checkbox' ? 'check-field' : '')}
@@ -259,15 +262,19 @@ export function Field({
       <label htmlFor={id}>{label}</label>
       <Tag
         id={id}
-        aria-describedby={hint || error ? id + '-hint' : undefined}
+        aria-describedby={fieldHint || error ? id + '-hint' : undefined}
         aria-invalid={!!error}
         {...props}
+        {...(currencyAmount ? { inputMode: 'decimal', onWheel: (event) => {
+          if (document.activeElement === event.currentTarget) event.currentTarget.blur();
+          props.onWheel?.(event);
+        } } : {})}
       >
         {children}
       </Tag>
-      {(hint || error) && (
+      {(fieldHint || error) && (
         <small id={id + '-hint'} className={error ? 'field-error' : ''}>
-          {error || hint}
+          {error || fieldHint}
         </small>
       )}
     </div>
@@ -280,6 +287,9 @@ export function Notice({ children, tone = '' }) {
       <div>{children}</div>
     </div>
   );
+}
+export function PaymentDemoLabel() {
+  return <p className="small muted payment-demo-label">Simulated payment · no real money moves.</p>;
 }
 export function Toasts() {
   const [items, set] = useState([]);

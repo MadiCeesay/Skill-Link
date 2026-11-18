@@ -22,6 +22,7 @@ import {
   QueryState,
   ErrorNotice,
   Notice,
+  PaymentDemoLabel,
   Empty,
   Chip,
   FileUpload,
@@ -58,9 +59,9 @@ export function ProfessionalWorkspace() {
   return (
     <>
       <PageTitle
-        eyebrow="YOUR PROFESSIONAL HOME"
-        title="Let your work speak for you."
-        description="Build a profile that helps the right customers find you."
+
+        title="Worker profile"
+        description="Add your skills, services and work areas."
       >
         {query.data?.profile.profileVisibility === 'PUBLIC' && (
           <Button variant="outline" to={'/professionals/' + user.id}>
@@ -204,7 +205,7 @@ function ProfileForm({ profile: p }) {
       )}
       <div className="two-grid">
         <div className="stack">
-          <Panel title="The professional behind the work">
+          <Panel title="About you">
             <div className="row">
               {image && (
                 <ProtectedMedia
@@ -265,7 +266,7 @@ function ProfileForm({ profile: p }) {
               <option value="PUBLIC">Public · visible when eligible</option>
             </Field>
           </Panel>
-          <Panel title="What you do & how you price it">
+          <Panel title="Services and prices">
             {catalog.error && <ErrorNotice error={catalog.error} />}
             <div className="service-checkboxes">
               {catalog.services.map((s) => (
@@ -555,7 +556,7 @@ function Verification() {
       {({ verification: v }) => (
         <div className="two-grid">
           <Panel
-            title="Trust starts with a real person"
+            title="Identity check"
             action={<Chip status={v.status} />}
           >
             <p className="prose">
@@ -675,7 +676,7 @@ function Reputation({ profile }) {
           icon={CheckCircle2}
         />
       </div>
-      <Panel title="Your reputation, one project at a time">
+      <Panel title="Reviews">
         <QueryState query={reviews}>
           {(data) => (
             <>
@@ -694,7 +695,7 @@ function Reputation({ profile }) {
                 ))
               ) : (
                 <Empty
-                  title="Good work builds a good name"
+                  title="No reviews yet"
                   description="Your customers can review you after completing a SkillLink booking."
                 />
               )}
@@ -716,8 +717,8 @@ export function Availability() {
   return (
     <>
       <PageTitle
-        eyebrow="MAKE YOUR WORKDAY YOURS"
-        title="A schedule that works for you."
+
+        title="Work hours"
         description="Set your weekly hours and time off in Gambian local time."
       />
       {profile.data && (
@@ -762,6 +763,7 @@ function ScheduleEditor({ initial }) {
     [blocked, setBlocked] = useState(initial.blockedDates),
     [off, setOff] = useState(initial.timeOff),
     action = useAction(),
+    [scheduleNote, setScheduleNote] = useState(''),
     [error, setError] = useState(null);
   const days = [
     'Sunday',
@@ -797,13 +799,22 @@ function ScheduleEditor({ initial }) {
     <form className="form-stack" onSubmit={save}>
       <div className="two-grid">
         <Panel
-          title="Your weekly rhythm"
+          title="Weekly hours"
           description="Add more than one interval for breaks. Adjacent intervals are allowed."
         >
+          <div className="availability-presets">
+            <Button type="button" variant="outline" onClick={() => {
+              setWeekly([1, 2, 3, 4, 5, 6].map(day => ({ day, start: '08:00', end: '18:00' })));
+              setScheduleNote('Monday to Saturday hours added. Sunday is not working. Save to apply.');
+            }}>Mon to Sat 8am to 6pm</Button>
+            <p className="small muted">Copying a day replaces Monday to Friday hours and keeps weekend hours. Save to apply changes.</p>
+          </div>
+          <p className="small muted" role="status">{scheduleNote}</p>
           {days.map((day, n) => (
             <div className="day-row" key={day}>
               <strong>{day}</strong>
               <div>
+                {!weekly.some(w => w.day === n) && <p className="muted day-not-working">Not working</p>}
                 {weekly.map((w, i) =>
                   w.day === n ? (
                     <div className="time-range" key={i}>
@@ -847,6 +858,16 @@ function ScheduleEditor({ initial }) {
                     </div>
                   ) : null,
                 )}
+                {weekly.some(w => w.day === n) && <button
+                  type="button"
+                  className="text-button copy-weekdays"
+                  aria-label={'Copy ' + day + ' hours to all weekdays'}
+                  onClick={() => {
+                    const hours = weekly.filter(w => w.day === n);
+                    setWeekly(a => [...a.filter(w => w.day === 0 || w.day === 6), ...[1, 2, 3, 4, 5].flatMap(day => hours.map(w => ({ ...w, day })))]);
+                    setScheduleNote(day + ' hours copied to Monday to Friday. Save to apply.');
+                  }}
+                >Copy to all weekdays</button>}
                 <button
                   type="button"
                   className="text-button"
@@ -865,7 +886,7 @@ function ScheduleEditor({ initial }) {
           ))}
         </Panel>
         <div className="stack">
-          <Panel title="Days for yourself">
+          <Panel title="Days off">
             {blocked.map((d, i) => (
               <div className="row" key={i}>
                 <Field
@@ -967,33 +988,30 @@ export function Earnings() {
   return (
     <>
       <PageTitle
-        eyebrow="A CLEAR VIEW OF YOUR PROGRESS"
-        title="Your work, accounted for."
-        description="Simulated earnings only. No actual balance or withdrawal is available."
+
+        title="Earnings"
+        description="Check pending and released payments."
       />
       <QueryState query={query}>
         {(data) => (
           <div className="stats-grid two">
             <Stat
-              label="Pending · simulated"
+              label="Pending"
               value={money(data.pendingEarningsBututs)}
               icon={Clock3}
             />
             <Stat
-              label="Released · simulated"
+              label="Released"
               value={money(data.releasedEarningsBututs)}
               icon={Wallet}
             />
           </div>
         )}
       </QueryState>
-      <Notice>
-        These are demonstration amounts, not money held in a bank or wallet.
-        There is no real withdrawal action.
-      </Notice>
+      <PaymentDemoLabel />
       <Panel
         title="Your booking finances"
-        description="Open a booking’s payment view for its fee breakdown and simulated ledger."
+        description="Open a booking to check its payments and fees."
       >
         <QueryState query={bookings}>
           {(data) => (
@@ -1017,7 +1035,7 @@ export function Earnings() {
                 ))
               ) : (
                 <Empty
-                  title="Your next milestone starts with a job"
+                  title="No payment history yet"
                   description="Your booking payment history will appear here."
                 />
               )}

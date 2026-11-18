@@ -2142,6 +2142,13 @@ dialog::backdrop {
   flex: 1;
   min-width: 0;
 }
+.booking-person { gap: 12px; overflow-wrap: anywhere; }
+.overview-next-booking + .actions { margin-top: 14px; }
+.booking-row .booking-person { margin-bottom: 8px; }
+.conversation-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+.conversation-meta .chip { font-size: 10px; }
+.notification-unread-label { display: inline-flex; align-items: center; gap: 6px; color: var(--ink); font-weight: 700; font-size: 12px; }
+.notification-unread-label::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: #c65300; }
 .booking-row h3 {
   font-size: 13px;
   line-height: 1.5;
@@ -2232,6 +2239,22 @@ dialog::backdrop {
   border-bottom: 1px solid var(--line);
   font-size: 11px;
 }
+.availability-presets { display: grid; gap: 10px; justify-items: start; }
+.day-not-working { margin: 8px 0; }
+.copy-weekdays { display: flex; margin: 4px 0 12px; text-align: left; }
+.people-filters { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; margin-bottom: 24px; }
+.people-filters .field { flex: 1 1 180px; margin: 0; }
+.people-filters .button { flex-shrink: 0; }
+.chat-price-form { padding: 14px 18px; border-top: 1px solid var(--line); display: flex; gap: 10px; flex-wrap: wrap; align-items: end; }
+.chat-price-form .field { flex: 1 1 150px; margin: 0; }
+.chat-price-form > p, .chat-price-form > .error-notice { flex-basis: 100%; margin: 0; }
+.chat-price-card { display: grid; gap: 10px; }
+.chat-price-card p { margin: 0; }
+.messenger.has-conversation { height: max(650px, calc(100dvh - 220px)); max-height: none; grid-template-rows: minmax(0, 1fr); }
+.messenger.has-conversation .conversation-main { height: 100%; min-height: 0; overflow: hidden; }
+.messenger.has-conversation .message-history { min-height: 0; }
+.conversation-main > .chat-header, .conversation-main > .chat-context, .conversation-main > .chat-safety,
+.conversation-main > .chat-price-form, .conversation-main > .composer { flex-shrink: 0; }
 .day-row > strong {
   padding-top: 25px;
 }
@@ -2779,7 +2802,7 @@ td .actions {
     gap: 12px;
   }
   .booking-row > .chip {
-    display: none;
+    display: inline-flex;
   }
   .header-actions {
     gap: 17px;
@@ -3396,9 +3419,10 @@ td .actions {
     padding: 20px 0;
   }
   .booking-row > strong {
-    margin-left: 65px;
+    margin-left: 0;
     font-size: 11px;
   }
+  .booking-row > .chip { margin-left: 65px; }
   .booking-row > svg {
     margin-left: auto;
   }
@@ -4360,6 +4384,17 @@ td .actions {
 .proposal-form small,.job-location small{color:#68645f;line-height:1.6}
 .job-location{background:#fff8ee;border:1px solid #f1e2ce;border-radius:16px;padding:18px;display:grid;gap:12px}
 .job-location p{margin:0}
+.location-map-wrap { min-width: 0; }
+.location-map { height: 300px; width: 100%; border: 1px solid var(--line); border-radius: 12px; z-index: 0; background: #edece8; font-family: inherit; }
+.location-map .leaflet-control-attribution { font-size: 10px; background: #fff; color: #333; }
+.location-map .leaflet-control-attribution a { color: #16537e; text-decoration: underline; }
+.location-map .leaflet-control-zoom a { color: #222; }
+.location-pin { background: none; border: 0; }
+.location-pin span { display: block; width: 26px; height: 26px; background: var(--primary); border: 2px solid #fff; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); box-shadow: 0 2px 5px #0005; }
+.location-pin span::after { content: ''; display: block; width: 8px; height: 8px; background: #fff; border-radius: 50%; margin: 7px; }
+.location-map:focus-visible, .location-pin:focus-visible { outline: 3px solid #151515; outline-offset: 3px; }
+.booking-location-map { display: grid; gap: 12px; margin: 16px 0; }
+.booking-location-map > a { justify-self: start; }
 .overview-priority{margin:0 0 24px}
 .chat-context{padding:12px 20px;background:#fff8ee;border-bottom:1px solid #eee3d5;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
 .chat-context .text-link{margin-left:auto}

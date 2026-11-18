@@ -34,8 +34,9 @@ function mountPayment(status) {
 
 it('explains an unpaid booking without hiding the supported checkout action', async () => {
   mountPayment(404);
-  expect(await screen.findByText('No payment simulation has been recorded for this booking.')).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Run payment simulation' })).toBeEnabled();
+  expect(await screen.findByText('No payment has been recorded for this booking.')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Record payment' })).toBeEnabled();
+  expect(screen.getAllByText(/Simulated payment/)).toHaveLength(1);
   expect(screen.queryByRole('alert')).not.toBeInTheDocument();
 });
 

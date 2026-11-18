@@ -17,7 +17,6 @@ const Home = page(() => import('./features/public'), 'Home'),
   HowItWorks = page(() => import('./features/public'), 'HowItWorks'),
   Information = page(() => import('./features/public'), 'Information');
 const AuthPage = page(() => import('./features/auth'), 'AuthPage'),
-  AccountGap = page(() => import('./features/auth'), 'AccountGap'),
   Dashboard = page(() => import('./features/dashboard'), 'Dashboard'),
   Account = page(() => import('./features/dashboard'), 'Account');
 const Jobs = page(() => import('./features/jobs'), 'Jobs'),
@@ -80,7 +79,7 @@ export function AppRoutes() {
           ))}
           {['forgot-password', 'reset-password', 'account-verification'].map(
             (p) => (
-              <Route key={p} path={p} element={<AccountGap />} />
+              <Route key={p} path={p} element={<Navigate to="/login" replace />} />
             ),
           )}
         </Route>

@@ -154,10 +154,10 @@ it('guides public workers with pending identity verification without bypassing a
 it('shows customer-specific actions and excludes worker financial information', async () => {
   mount('CUSTOMER', <RoleDashboard />);
   expect(
-    await screen.findByText('What’s your next project?'),
+    await screen.findByText('No requests yet'),
   ).toBeInTheDocument();
   expect(
-    screen.getByRole('link', { name: 'Post your first job' }),
+    screen.getByRole('link', { name: 'Post your first request' }),
   ).toHaveAttribute('href', '/app/jobs/new');
   expect(
     screen.queryByText('Released earnings · simulated'),
@@ -167,9 +167,31 @@ it('keeps the dashboard shell visible while data is loading', () => {
   fetch.mockImplementation(() => new Promise(() => {}));
   mount('ADMIN', <AdminOverview />);
   expect(
-    screen.getByRole('heading', { name: 'The marketplace at a glance.' }),
+    screen.getByRole('heading', { name: 'Overview' }),
   ).toBeInTheDocument();
   expect(screen.getAllByRole('status').length).toBeGreaterThan(0);
+});
+it.each([
+  ['AWAITING_PAYMENT', 'Pay for booking', '/app/bookings/next/payment'],
+  ['WORKER_MARKED_COMPLETED', 'Check completed work', '/app/bookings/next'],
+])('shows the next %s booking and links to its existing next action without submitting anything', async (status, label, href) => {
+  const original = fetch.getMockImplementation();
+  fetch.mockImplementation((url, options) => new URL(url).pathname.endsWith('/bookings/me')
+    ? Promise.resolve(new Response(JSON.stringify({ success: true, data: { bookings: [
+      { id: 'done', status: 'COMPLETED', description: 'Past work', scheduledStart: '2020-01-01T10:00:00Z' },
+      { id: 'later', status: 'CONFIRMED', description: 'Later work', scheduledStart: '2099-02-01T10:00:00Z' },
+      { id: 'next', status, description: 'Repair a light', serviceSummary: { name: 'Electrician' }, counterpart: { firstName: 'Musa', lastName: 'Banja' }, scheduledStart: '2099-01-01T10:00:00Z', reservationExpiresAt: '2099-01-01T09:00:00Z' },
+    ], pagination: { total: 3 } } })))
+    : original(url, options));
+  // Preserve the existing mock implementation for all non-booking queries.
+  mount('CUSTOMER', <RoleDashboard />);
+  const heading = await screen.findByRole('heading', { name: 'Next booking' });
+  const panel = within(heading.closest('section'));
+  expect(await panel.findByText('Electrician')).toBeInTheDocument();
+  expect(panel.getByText('Musa Banja')).toBeInTheDocument();
+  expect(panel.getByRole('link', { name: label })).toHaveAttribute('href', href);
+  expect(panel.queryByText('Later work')).not.toBeInTheDocument();
+  expect(fetch.mock.calls.every(([, options]) => !options?.method || options.method === 'GET')).toBe(true);
 });
 it('shows retryable API errors instead of invented metric values', async () => {
   fetch.mockResolvedValue(

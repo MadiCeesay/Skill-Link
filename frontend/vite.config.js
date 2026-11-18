@@ -8,7 +8,15 @@ export default defineConfig({
       server.middlewares.use(localOriginRedirect(server.config.server.port));
     },
   }],
-  server: { host: '127.0.0.1', port: 5173, strictPort: true },
+  server: {
+    host: '127.0.0.1',
+    port: 5173,
+    strictPort: true,
+    proxy: {
+      '/api': 'http://localhost:5000',
+      '/socket.io': { target: 'http://localhost:5000', ws: true },
+    },
+  },
   test: {
     environment: 'jsdom',
     setupFiles: ['./tests/setup.js'],

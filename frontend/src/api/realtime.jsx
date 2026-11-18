@@ -30,6 +30,8 @@ export function RealtimeProvider({ children }) {
             cache.invalidateQueries({
               queryKey: ['api', '/conversations/' + active + '/messages'],
             });
+            cache.invalidateQueries({ queryKey: ['api', '/conversations/' + active] });
+            cache.invalidateQueries({ predicate: q => q.queryKey[0] === 'api' && String(q.queryKey[1]).startsWith('/direct-proposals') });
           },
         );
     });
@@ -42,6 +44,13 @@ export function RealtimeProvider({ children }) {
           queryKey: ['api', '/notifications/unread-count'],
         });
       }
+    });
+    socket.on('price-offer', data => {
+      if (data.offer?.conversation !== active) return;
+      cache.invalidateQueries({ queryKey: ['api', '/conversations/' + active + '/messages'] });
+      cache.invalidateQueries({ queryKey: ['api', '/conversations/' + active] });
+      cache.invalidateQueries({ queryKey: ['api', '/conversations/me'] });
+      cache.invalidateQueries({ predicate: q => q.queryKey[0] === 'api' && String(q.queryKey[1]).startsWith('/direct-proposals') });
     });
     socket.on('disconnect', async (reason) => {
       setStatus('offline');

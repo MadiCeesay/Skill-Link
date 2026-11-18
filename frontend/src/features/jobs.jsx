@@ -77,19 +77,18 @@ export function Jobs() {
   return (
     <>
       <PageTitle
-        eyebrow={worker ? 'YOUR SKILLS. THE RIGHT PROJECT.' : 'YOUR PROJECTS'}
         title={
-          worker ? 'Find your next opportunity.' : 'Good things in the works.'
+          worker ? 'Requests' : 'Requests'
         }
         description={
           worker
             ? 'Open requests matched to your services, area and verification.'
-            : 'Track your requests, compare quotes and choose your professional.'
+            : 'Track your requests, compare offers and choose your professional.'
         }
       >
         {!worker && (
           <Button to="/app/jobs/new">
-            Post a job
+            Post request
             <ArrowUpRight size={17} />
           </Button>
         )}
@@ -103,9 +102,9 @@ export function Jobs() {
       ) : (
         <div className="tabs">
           {[
-            ['', 'All jobs'],
+            ['', 'All requests'],
             ['OPEN', 'Open'],
-            ['QUOTE_ACCEPTED', 'Quote accepted'],
+            ['QUOTE_ACCEPTED', 'Offer accepted'],
             ['CANCELLED', 'Cancelled'],
             ['EXPIRED', 'Expired'],
           ].map(([value, label]) => (
@@ -138,17 +137,17 @@ export function Jobs() {
                   icon={BriefcaseBusiness}
                   title={
                     worker
-                      ? 'The right job will find its way here'
-                      : 'Your first project starts with a few details'
+                      ? 'No matching requests yet'
+                      : 'No requests yet'
                   }
                   description={
                     worker
                       ? 'There are no relevant open requests right now. Keep your services and service areas up to date.'
-                      : 'Post a job and eligible professionals can respond with quotes.'
+                      : 'Post request and eligible professionals can respond with offers.'
                   }
                   action={
                     <Button to={worker ? '/work/profile' : '/app/jobs/new'}>
-                      {worker ? 'Review your profile' : 'Post a job'}
+                      {worker ? 'Review your profile' : 'Post request'}
                     </Button>
                   }
                 />
@@ -189,7 +188,7 @@ function JobCard({ job: j, worker }) {
       <div className="row between job-bottom">
         <strong>{budget(j.budget)}</strong>
         <span className="small">
-          {j.quoteCount} quotes
+          {j.quoteCount} offers
           <ArrowUpRight size={16} />
         </span>
       </div>
@@ -202,11 +201,11 @@ export function JobEditor() {
   return (
     <>
       <PageTitle
-        eyebrow="TELL US WHAT YOU HAVE IN MIND"
+
         title={
-          id ? 'A little change of plans.' : 'Let’s get your project moving.'
+          id ? 'Edit request' : 'Post request'
         }
-        description="Describe the work. Relevant professionals can respond with quotes."
+        description="Describe the work. Relevant professionals can respond with offers."
       />
       {id ? (
         <QueryState query={query}>
@@ -216,7 +215,7 @@ export function JobEditor() {
             ) : (
               <Notice>
                 This job’s terms are locked because it is closed or has already
-                received a quote.
+                received an offer.
               </Notice>
             )
           }
@@ -230,6 +229,7 @@ export function JobEditor() {
 function JobForm({ existing: j }) {
   const catalog = useCatalog(),
     [location, setLocation] = useState(j?.location || null),
+    [selectedService, setSelectedService] = useState(j?.service || ''),
     [type, setType] = useState(j?.budget?.type || 'OPEN_TO_QUOTES'),
     [retainedAttachments, setRetainedAttachments] = useState(j?.attachments || []),
     [newAttachments, setNewAttachments] = useState([]),
@@ -293,7 +293,8 @@ function JobForm({ existing: j }) {
               as="select"
               name="service"
               required
-              defaultValue={j?.service || ''}
+              value={selectedService}
+              onChange={event => setSelectedService(event.target.value)}
             >
               <option value="">Choose a service</option>
               {catalog.services.map((s) => (
@@ -304,7 +305,7 @@ function JobForm({ existing: j }) {
             </Field>
             {catalog.error && <ErrorNotice error={catalog.error} />}
             <Field
-              label="Job title"
+              label="Request title"
               name="title"
               required
               minLength={5}
@@ -313,7 +314,7 @@ function JobForm({ existing: j }) {
               placeholder="e.g. Repair a leaking kitchen tap"
             />
             <Field
-              label="Describe your project"
+              label="Describe the work"
               as="textarea"
               rows={6}
               name="description"
@@ -347,7 +348,7 @@ function JobForm({ existing: j }) {
               value={type}
               onChange={(e) => setType(e.target.value)}
             >
-              <option value="OPEN_TO_QUOTES">I’m open to quotes</option>
+              <option value="OPEN_TO_QUOTES">I’m open to offers</option>
               <option value="FIXED">A fixed budget</option>
               <option value="RANGE">A budget range</option>
             </Field>
@@ -435,7 +436,7 @@ function JobForm({ existing: j }) {
             />
           </Panel>
           <Notice>
-            Your brief can be edited until the first quote arrives. After that,
+            Your brief can be edited until the first offer arrives. After that,
             its terms stay fixed so offers can be compared fairly.
           </Notice>
         </div>
@@ -443,14 +444,14 @@ function JobForm({ existing: j }) {
       {error && <ErrorNotice error={error} />}
       <div className="form-footer">
         <Button to="/app/jobs" variant="outline">
-          Back to jobs
+          Back to requests
         </Button>
         <Button type="submit" disabled={action.isPending}>
           {action.isPending
             ? 'Publishing…'
             : j
               ? 'Save changes'
-              : 'Publish job'}
+              : 'Post request'}
           <ArrowUpRight size={17} />
         </Button>
       </div>
@@ -469,7 +470,7 @@ export function JobDetails() {
         className="back-link"
         to={worker ? '/work/opportunities' : '/app/jobs'}
       >
-        ← Back to {worker ? 'opportunities' : 'your jobs'}
+        ← Back to requests
       </Link>
       <QueryState query={query}>
         {(data) => {
@@ -491,15 +492,15 @@ export function JobDetails() {
                 )}
                 {!worker && j.status === 'OPEN' && (
                   <Command
-                    label="Cancel job"
+                    label="Cancel request"
                     path={'/job-requests/' + id + '/cancel'}
-                    description="This closes the request and all pending quotes."
+                    description="This closes the request and all pending offers."
                     variant="outline"
                   />
                 )}
               </PageTitle>
               <div className="two-grid">
-                <Panel title="The project">
+                <Panel title="Work details">
                   <p className="prose">{j.description}</p>
                   <dl className="details">
                     <div>
@@ -552,13 +553,13 @@ export function JobDetails() {
                     </div>
                   )}
                 </Panel>
-                <Panel title={worker ? 'Your quote' : 'What happens next'}>
+                <Panel title={worker ? 'Your offer' : 'What happens next'}>
                   {worker ? (
                     <QuoteForm jobId={id} />
                   ) : j.status === 'QUOTE_ACCEPTED' ? (
                     <>
                       <Notice>
-                        Quote accepted. Choose a schedule to create your
+                        Offer accepted. Choose a schedule to create your
                         booking. No booking has been created automatically.
                       </Notice>
                       <ActionForm
@@ -578,11 +579,11 @@ export function JobDetails() {
                     <>
                       <BriefcaseBusiness className="accent-text" size={32} />
                       <p className="prose">
-                        Eligible professionals can respond with quotes. Compare
+                        Eligible professionals can respond with offers. Compare
                         their profiles and offers, ask questions, and choose the
                         right fit for your project.
                       </p>
-                      <p className="muted">{j.quoteCount} quotes received</p>
+                      <p className="muted">{j.quoteCount} offers received</p>
                     </>
                   )}
                 </Panel>
@@ -598,7 +599,7 @@ export function JobDetails() {
 const quoteFields = [
   {
     name: 'amount',
-    label: 'Your quote · GMD',
+    label: 'Your offer · GMD',
     type: 'number',
     step: '0.01',
     min: 0,
@@ -634,7 +635,7 @@ function QuoteForm({ jobId, quote }) {
   return (
     <>
       <Notice>
-        Your quote is an offer. The customer chooses whether to accept it. Keep
+        An offer tells the customer your price. The customer chooses whether to accept it. Keep
         contact details inside SkillLink.
       </Notice>
       <ActionForm
@@ -655,7 +656,7 @@ function QuoteForm({ jobId, quote }) {
             : {}
         }
         build={quoteBody}
-        submit={quote ? 'Update quote' : 'Submit your quote'}
+        submit={quote ? 'Update offer' : 'Send offer'}
         onSuccess={(data) => {
           if (!quote) navigate('/work/quotes/' + data.quote.id);
         }}
@@ -731,12 +732,12 @@ function ReceivedQuotes({ job }) {
                       <StartChat type="QUOTE" id={q.id} />
                       {job.status === 'OPEN' && canChangeQuote(q) && (
                         <Command
-                          label="Accept quote"
+                          label="Accept offer"
                           path={'/quotes/' + q.id + '/accept'}
                           description={
                             'Accept this offer for ' +
                             money(q.proposedAmountBututs) +
-                            '? Competing pending quotes will close. Choose your booking schedule afterward.'
+                            '? Competing pending offers will close. Choose your booking schedule afterward.'
                           }
                         />
                       )}
@@ -747,7 +748,7 @@ function ReceivedQuotes({ job }) {
             ) : (
               <Empty
                 title="Your request is out there"
-                description="Quotes from relevant professionals will appear here."
+                description="Offers from relevant professionals will appear here."
               />
             )}
             <Pager
@@ -767,9 +768,9 @@ export function Quotes() {
   return (
     <>
       <PageTitle
-        eyebrow="YOUR OFFERS"
-        title="A good offer opens a door."
-        description="Manage the quotes you’ve sent to customers."
+
+        title="Offers sent"
+        description="Manage the offers you’ve sent to customers."
       />
       <QueryState query={query}>
         {(data) => (
@@ -799,8 +800,8 @@ export function Quotes() {
               </div>
             ) : (
               <Empty
-                title="Put your skills forward"
-                description="Find a relevant opportunity and send your first quote."
+                title="No offers sent yet"
+                description="Find a relevant opportunity and send your first offer."
                 action={
                   <Button to="/work/opportunities">Find opportunities</Button>
                 }
@@ -823,8 +824,8 @@ export function QuoteDetails() {
   return (
     <>
       <PageTitle
-        title="Your service offer."
-        description="Pending quotes can be updated or withdrawn. Accepted terms remain fixed."
+        title="Offer details"
+        description="Pending offers can be updated or withdrawn. Accepted terms remain fixed."
       />
       <QueryState query={query}>
         {({ quote: q }) => (
@@ -838,9 +839,9 @@ export function QuoteDetails() {
               <StartChat type="QUOTE" id={q.id} />
               {canChangeQuote(q) && (
                 <Command
-                  label="Withdraw quote"
+                  label="Withdraw offer"
                   path={'/quotes/' + id + '/withdraw'}
-                  description="Withdraw your offer? You cannot submit a replacement quote for this job."
+                  description="Withdraw your offer? You cannot submit a replacement offer for this job."
                   variant="outline"
                 />
               )}

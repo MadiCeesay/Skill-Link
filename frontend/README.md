@@ -43,7 +43,7 @@ The browser suite starts its own API on **5001** and Vite on **5174**, uses disp
 
 ## Important behavior
 
-- Access and rotating refresh tokens stay **in memory**. Reloading or closing the tab requires signing in again. Tokens are not stored in localStorage, sessionStorage or JavaScript-readable cookies. API requests share one refresh operation; logout revokes the current server session and clears cached private data.
+- Only the rotating refresh token is saved in localStorage (`skilllink.refreshToken`). Access tokens and user details stay in memory. On load, the app rotates through `/auth/refresh`, then fetches `/auth/me` before opening protected routes. Failed refreshes and sign-out clear the saved token and private cache. Refresh operations are shared within a tab; browsers supporting Web Locks also serialize rotation across tabs. Storage-disabled browsers retain sessions only in memory. Because localStorage is JavaScript-readable, protect the application against XSS and sign out on shared computers.
 - All money is parsed as decimal GMD into safe **integer bututs**, with exact display using BigInt. One GMD is 100 bututs. Financial totals returned as integer strings stay exact.
 - All proposed times are explicitly **Africa/Banjul**, transmitted as UTC. The backend validates weekly availability, blocked dates, conflicts, holds and lifecycle permissions. Public slot calendars are not exposed by the existing API; users propose a time, then the API validates it.
 - Quote acceptance is followed by a separate scheduling/booking step. Direct proposals require professional acceptance and use the same centralized booking engine.
@@ -52,6 +52,10 @@ The browser suite starts its own API on **5001** and Vite on **5174**, uses disp
 - There is no bundled fake marketplace catalog, rating, professional count, revenue chart or testimonial. Empty API results produce purposeful empty states. Test fixtures live only under `tests/`.
 
 ## Documentation
+
+- [Plain English and simpler layouts (items 11–16)](docs/plain-language.md)
+
+- [Booking progress, amounts, participant context and readable notifications (items 5–10)](docs/participant-presentation.md)
 
 - [Homepage/admin reliability and requested demo-worker removal](docs/marketplace-reliability.md)
 - [Final manual-testing repairs, validation and FYP demonstration](docs/manual-testing-report.md)
@@ -72,4 +76,10 @@ Password recovery/change, OTP/email verification, account identity editing, publ
 # Flexible pricing update
 
 See [private quote requests and flexible pricing](docs/flexible-pricing.md) for the customer/worker workflow, compatibility, API rules and verification scope.
+
+# Job maps
+
+Job and proposal forms include Leaflet/OpenStreetMap pin selection, dragging and
+opt-in GPS. Exact booking maps follow the existing payment and participant permissions.
+See [location maps](docs/location-maps.md) for behaviour, tile usage and checks.
 

@@ -27,9 +27,10 @@ import {
   AccountAvatar,
   Notice,
   Command,
+  PaymentDemoLabel,
 } from '../components/ui';
-import { date, money, shortId } from '../utils/format';
-import { homeFor } from '../utils/policy';
+import { date, dateTime, displayName, money, shortId } from '../utils/format';
+import { homeFor, bookingActions } from '../utils/policy';
 
 const colors = ['#ff7900', '#ffba7a', '#ffe0bf', '#3e423e', '#c6c9bd'];
 export function Distribution({ segments, label, center }) {
@@ -155,8 +156,8 @@ function SimulatedFinance({ query, admin = false }) {
             </span>
             <span>
               {admin
-                ? 'Gross simulated collection'
-                : 'Released earnings · simulated'}
+                ? 'Total payments'
+                : 'Released earnings'}
             </span>
             <strong>
               {money(
@@ -183,21 +184,42 @@ function SimulatedFinance({ query, admin = false }) {
               </div>
             ))}
           </dl>
-          <p className="overview-demo-note">
-            <ShieldCheck size={13} />
-            Simulated payments. No real money moves.
-          </p>
+          <PaymentDemoLabel />
           <Button
             to={admin ? '/admin/payments' : '/work/earnings'}
             variant="dark"
           >
-            {admin ? 'View payments & ledger' : 'View earnings'}
+            {admin ? 'View payments' : 'View earnings'}
             <ArrowUpRight size={16} />
           </Button>
         </>
       )}
     </QueryState>
   );
+}
+function NextBooking({ query, user, base }) {
+  return <QueryState query={query}>{data => {
+    const next = data.bookings.filter(b =>
+      ['AWAITING_PAYMENT', 'CONFIRMED', 'IN_PROGRESS', 'WORKER_MARKED_COMPLETED', 'DISPUTED'].includes(b.status) &&
+      !(b.status === 'AWAITING_PAYMENT' && new Date(b.reservationExpiresAt) <= new Date()),
+    ).sort((a, b) => new Date(a.scheduledStart) - new Date(b.scheduledStart))[0];
+    if (!next) return <Empty icon={CalendarDays} title="No upcoming bookings" description="Your next booking will appear here." action={<Button to={base + '/bookings'} variant="outline">View bookings</Button>} />;
+    const actions = bookingActions(next, user.role);
+    const label = actions.includes('pay') ? 'Pay for booking' : actions.includes('confirm') ? 'Check completed work' : actions.includes('start') ? 'Start work' : actions.includes('complete') ? 'Mark work complete' : 'View booking';
+    const instruction = {
+      AWAITING_PAYMENT: user.role === 'CUSTOMER' ? 'Pay to confirm this booking.' : 'Waiting for the customer to pay.',
+      CONFIRMED: 'Check the agreed time and booking details.',
+      IN_PROGRESS: user.role === 'CUSTOMER' ? 'Work is in progress.' : 'Mark the work complete when you have finished.',
+      WORKER_MARKED_COMPLETED: user.role === 'CUSTOMER' ? 'Check the work, then confirm it is complete.' : 'Waiting for the customer to confirm completion.',
+      DISPUTED: 'Your reported problem is being reviewed.',
+    }[next.status];
+    return <div className="overview-next-booking">
+      <div className="row"><Avatar person={next.counterpart} src={next.counterpart?.profileImage?.url} /><div><h3>{next.serviceSummary?.name || next.description}</h3><p className="muted">{displayName(next.counterpart)}</p></div></div>
+      <p>{dateTime(next.scheduledStart)}</p><Chip status={next.status} />
+      <p>{instruction}</p>
+      <Button to={base + '/bookings/' + next.id + (actions.includes('pay') ? '/payment' : '')}>{label}<ArrowUpRight size={16} /></Button>
+    </div>;
+  }}</QueryState>;
 }
 export function RoleDashboard() {
   const { user } = useAuth(),
@@ -221,25 +243,23 @@ export function RoleDashboard() {
   return (
     <div className="dashboard-overview">
       <PageTitle
-        eyebrow={
-          worker ? 'YOUR PROFESSIONAL WORKSPACE' : 'YOUR PROJECTS, ALL TOGETHER'
-        }
         title={'Hello, ' + user.firstName + '.'}
         description={
           worker
-            ? 'Your workday, at a glance. Let’s make it a good one.'
-            : 'Find the right people. Keep every project moving.'
+            ? 'Check your requests, offers and bookings.'
+            : 'Check your requests, offers and next booking.'
         }
       >
+        {!worker && <Button to="/professionals">Find a professional<ArrowUpRight size={16} /></Button>}
         <Button to={worker ? canBrowseJobs ? '/work/opportunities' : '/work/profile' : '/app/jobs/new'}>
-          {worker ? canBrowseJobs ? 'Find opportunities' : 'Complete your profile' : 'Post a job'}
+          {worker ? canBrowseJobs ? 'Find requests' : 'Complete your profile' : 'Post request'}
           <ArrowUpRight size={16} />
         </Button>
       </PageTitle>
       <div className="stats-grid overview-kpis">
         <Stat
           icon={worker ? CheckCircle2 : CalendarDays}
-          label={worker ? 'Jobs completed' : 'Your bookings'}
+          label={worker ? 'Bookings completed' : 'Bookings'}
           value={
             worker
               ? profile.data?.profile.completedJobsCount
@@ -249,15 +269,15 @@ export function RoleDashboard() {
         />
         <Stat
           icon={BriefcaseBusiness}
-          label={worker ? 'Opportunities' : 'Job requests'}
+          label="Requests"
           value={jobs.data?.pagination.total}
           caption={worker ? draftProfile ? 'Publish your profile to browse' : 'Matched to your profile' : 'Your posted requests'}
         />
         <Stat
           icon={Users}
-          label="Direct proposals"
+          label={worker ? 'Offers received' : 'Offers'}
           value={proposals.data?.pagination.total}
-          caption="All proposals"
+          caption="All offers"
         />
         <Stat
           icon={worker ? Star : MessageSquare}
@@ -271,21 +291,23 @@ export function RoleDashboard() {
         />
       </div>
       <div className="overview-operational-grid overview-priority">
-        <Panel title={worker ? 'Your professional identity' : 'Your project desk'}>
-          <div className="row"><AccountAvatar person={user} size="large" /><div><h3>{user.firstName} {user.lastName}</h3><p className="muted">{worker ? 'Build trust. Keep your calendar up to date.' : 'Keep invitations, messages and bookings together.'}</p></div></div>
+        <Panel title={worker ? 'Your worker profile' : 'Next booking'}>
+          {worker ? <>
+          <div className="row"><AccountAvatar person={user} size="large" /><div><h3>{user.firstName} {user.lastName}</h3><p className="muted">{worker ? 'Keep your work hours up to date.' : 'Keep invitations, messages and bookings together.'}</p></div></div>
           {worker && professional && <div className="actions"><span className="small muted">Identity verification</span><Chip status={professional.verificationSummary.status} /><Chip status={professional.profileVisibility} /><Button to="/work/availability" variant="outline">Manage availability</Button></div>}
           {draftProfile && <Notice><p><strong>Your professional profile is still a draft.</strong> Identity approval does not publish it. Publish your profile to appear in professional search and access matched opportunities.</p>
             <div className="actions"><Command label="Publish profile" path="/workers/me/profile" method="PATCH" body={{ profileVisibility: 'PUBLIC' }}
               description="Make your professional profile visible to customers? Your profession, bio, services and service areas must be complete. Identity approval is still required for marketplace work." />
               <Button to="/work/profile" variant="outline">Edit professional profile</Button></div></Notice>}
+          </> : <NextBooking query={bookings} user={user} base={base} />}
           <div className="actions"><Button to={base + '/messages'} variant="outline">Messages</Button><Button to={base + '/notifications'} variant="outline">Notifications</Button></div>
         </Panel>
-        <Panel title={worker ? 'Incoming proposals' : 'Your service proposals'} action={<SeeAll to={base + '/proposals'}>View proposals</SeeAll>}>
+        <Panel title={worker ? 'Offers received' : 'Offers'} action={<SeeAll to={base + '/proposals'}>View offers</SeeAll>}>
           <QueryState query={proposals}>{data => {
             const pending = data.proposals.filter(p => ['PENDING', 'QUOTED'].includes(p.status));
-            return pending.length ? <div className="overview-action-list">{pending.slice(0, 3).map(p => <Link key={p.id} to={base + '/proposals'}><div><strong>{p.pricingMode === 'REQUEST_QUOTE' ? p.quotes?.length ? 'Quote received · ' + money(p.quotes.at(-1).amountBututs) : 'Quote requested' : money(p.agreedAmountBututs)} · {p.serviceArea?.name}</strong><small>{p.description.slice(0, 90)}</small><Chip status={p.status} /></div><ArrowUpRight size={16} /></Link>)}</div> : <p className="muted">No pending proposals in your recent invitations.</p>;
+            return pending.length ? <div className="overview-action-list">{pending.slice(0, 3).map(p => <Link key={p.id} to={base + '/proposals'}><div><strong>{p.pricingMode === 'REQUEST_QUOTE' ? p.quotes?.length ? 'Offer received · ' + money(p.quotes.at(-1).amountBututs) : 'Offer requested' : money(p.agreedAmountBututs)} · {p.serviceArea?.name}</strong><small>{p.description.slice(0, 90)}</small><Chip status={p.status} /></div><ArrowUpRight size={16} /></Link>)}</div> : <p className="muted">No offers waiting for a reply.</p>;
           }}</QueryState>
-          <p className="small muted">Discuss changes in messages, then formally accept or send revised terms.</p>
+          <p className="small muted">Discuss changes in messages before accepting an offer.</p>
         </Panel>
       </div>
       {worker && profile.error?.status === 404 && (
@@ -298,7 +320,7 @@ export function RoleDashboard() {
       <div className="overview-operational-grid">
         <Panel
           className="overview-requests"
-          title={worker ? 'New job opportunities' : 'Your recent requests'}
+          title={worker ? 'Requests' : 'Requests'}
           action={<SeeAll to={worker ? canBrowseJobs ? '/work/opportunities' : '/work/profile' : '/app/jobs'} />}
         >
           {worker && !canBrowseJobs ? (
@@ -321,7 +343,7 @@ export function RoleDashboard() {
                         <h3>{j.title}</h3>
                         <p>
                           {j.serviceArea.name} <span>·</span> {j.quoteCount}{' '}
-                          quotes
+                          offers
                         </p>
                         <div className="overview-request-meta">
                           <Clock3 size={12} />
@@ -347,13 +369,13 @@ export function RoleDashboard() {
                   icon={BriefcaseBusiness}
                   title={
                     worker
-                      ? 'Your next opportunity starts here'
-                      : 'What’s your next project?'
+                      ? 'No matching requests yet'
+                      : 'No requests yet'
                   }
                   description={
                     worker
                       ? 'Relevant jobs appear when your profile is public, verified and matches a customer’s request.'
-                      : 'Describe what you need and compare quotes from local professionals.'
+                      : 'Describe what you need and compare offers from local professionals.'
                   }
                   action={
                     <Button
@@ -364,7 +386,7 @@ export function RoleDashboard() {
                         ? profile.data
                           ? 'Review your profile'
                           : 'Complete your profile'
-                        : 'Post your first job'}
+                          : 'Post your first request'}
                       <ArrowUpRight size={15} />
                     </Button>
                   }
@@ -482,7 +504,7 @@ export function RoleDashboard() {
             <QueryState query={financial}>
               {(data) => (
                 <Distribution
-                  label="Current simulated pending and released earnings"
+                  label="Pending and released earnings"
                   center="GMD"
                   segments={[
                     {
@@ -525,7 +547,7 @@ export function RoleDashboard() {
                         <div>
                           <strong>
                             {b.status === 'AWAITING_PAYMENT'
-                              ? 'Payment awaiting simulation'
+                              ? 'Payment needed'
                               : 'Work ready for your confirmation'}
                           </strong>
                           <small>{b.description.slice(0, 65)}</small>
@@ -550,7 +572,7 @@ export function RoleDashboard() {
                   <Users size={20} />
                 </span>
                 <div>
-                  <strong>Direct service proposals</strong>
+                  <strong>Offers</strong>
                   <small>Track your invitations</small>
                 </div>
                 <ArrowUpRight size={16} />
@@ -561,7 +583,7 @@ export function RoleDashboard() {
                 </span>
                 <div>
                   <strong>Stay up to date</strong>
-                  <small>Quotes and project updates</small>
+                  <small>Offers and project updates</small>
                 </div>
                 <ArrowUpRight size={16} />
               </Link>
@@ -569,13 +591,13 @@ export function RoleDashboard() {
           )}
           {worker && (
             <p className="overview-demo-note">
-              Current simulated balance, not a historical trend.
+              Current earnings totals.
             </p>
           )}
         </Panel>
         <Panel
           className="overview-finance"
-          title={worker ? 'Earnings summary' : 'Find your next helping hand'}
+          title={worker ? 'Earnings summary' : 'Find a worker'}
         >
           {worker ? (
             <SimulatedFinance query={financial} />
@@ -584,18 +606,18 @@ export function RoleDashboard() {
               <div className="overview-discovery-icon">
                 <Users size={34} />
               </div>
-              <h3>Two ways to get it done.</h3>
+              <h3>Choose how to find a worker</h3>
               <p className="muted">
-                Explore professional profiles, or post your job and compare real
-                quotes.
+                Choose a worker or post a request and compare
+                offers.
               </p>
               <Button to="/professionals">
                 Find a professional
                 <ArrowUpRight size={16} />
               </Button>
-              <SeeAll to="/app/jobs/new">Post a job instead</SeeAll>
+              <SeeAll to="/app/jobs/new">Post request</SeeAll>
               <p className="overview-demo-note">
-                Payments in SkillLink are simulated.
+                Agree a price before booking.
               </p>
             </>
           )}
@@ -605,8 +627,8 @@ export function RoleDashboard() {
         <ShieldCheck size={18} />
         <span>
           {worker
-            ? 'Your skills. Your schedule. Your next opportunity.'
-            : 'Your project, your choice. Every agreement stays in SkillLink.'}
+            ? 'Keep your work hours and booking details up to date.'
+            : 'Keep your requests, offers and bookings in one place.'}
         </span>
         <SeeAll to={worker ? '/work/availability' : '/app/messages'}>
           {worker ? 'Set availability' : 'Open messages'}
@@ -625,8 +647,8 @@ export function AdminOverview() {
     <div className="dashboard-overview">
       <PageTitle
         eyebrow="SKILLLINK OPERATIONS"
-        title="The marketplace at a glance."
-        description="A clear view of the people, work and decisions that matter."
+        title="Overview"
+        description="Check users, bookings and decisions."
       >
         <Button to="/admin/verifications">
           Review applications
@@ -848,7 +870,7 @@ export function AdminOverview() {
             <SeeAll to="/admin/catalog">Manage the service catalog</SeeAll>
           </div>
         </Panel>
-        <Panel className="overview-finance" title="Simulated financial summary">
+        <Panel className="overview-finance" title="Payments">
           <SimulatedFinance query={metrics} admin />
         </Panel>
       </div>

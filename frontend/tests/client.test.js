@@ -1,5 +1,5 @@
 import { beforeEach, afterEach, it, expect, vi } from 'vitest';
-import { api, session, refreshSession, ApiError } from '../src/api/client';
+import { api, session, refreshSession, restoreSession, ApiError } from '../src/api/client';
 import { requestCooldown } from '../src/api/rate-limit';
 const ok = (data) =>
   new Response(JSON.stringify({ success: true, data }), {
@@ -53,13 +53,61 @@ it('explains the server rate-limit wait without retrying the request', async () 
   });
   expect(fetch).toHaveBeenCalledOnce();
 });
-it('keeps credentials out of browser persistence', () => {
+it('persists only the refresh token and removes it on sign-out', () => {
   session.set({
     accessToken: 'private-access',
     refreshToken: 'private-refresh',
   });
-  expect(localStorage.length).toBe(0);
+  expect(localStorage.length).toBe(1);
+  expect(localStorage.getItem('skilllink.refreshToken')).toBe('private-refresh');
   expect(sessionStorage.length).toBe(0);
+  session.clear();
+  expect(localStorage.length).toBe(0);
+});
+it('restores a reload with one rotation and loads the current user using its access token', async () => {
+  localStorage.setItem('skilllink.refreshToken', 'saved');
+  const user = { id: 'admin', role: 'ADMIN' };
+  fetch.mockImplementation(async (url, options) => {
+    if (url.endsWith('/auth/refresh')) {
+      expect(JSON.parse(options.body)).toEqual({ refreshToken: 'saved' });
+      return ok({ accessToken: 'access', refreshToken: 'next' });
+    }
+    expect(url).toContain('/auth/me');
+    expect(options.headers.Authorization).toBe('Bearer access');
+    return ok({ user });
+  });
+  await Promise.all([restoreSession(), restoreSession()]);
+  expect(fetch).toHaveBeenCalledTimes(2);
+  expect(session.get().user).toEqual(user);
+  expect(localStorage.getItem('skilllink.refreshToken')).toBe('next');
+});
+it.each([401, 429, 500])('clears a saved token if boot-time rotation fails with %s', async status => {
+  localStorage.setItem('skilllink.refreshToken', 'saved');
+  fetch.mockResolvedValue(new Response(JSON.stringify({ success: false }), { status }));
+  await restoreSession();
+  expect(session.get()).toBe(null);
+  expect(localStorage.length).toBe(0);
+});
+it('clears a restored token when loading its user fails', async () => {
+  localStorage.setItem('skilllink.refreshToken', 'saved');
+  fetch.mockResolvedValueOnce(ok({ accessToken: 'access', refreshToken: 'next' })).mockResolvedValueOnce(denied());
+  await restoreSession();
+  expect(session.get()).toBe(null);
+  expect(localStorage.length).toBe(0);
+});
+it('does not overwrite a second tab rotation while loading the user', async () => {
+  localStorage.setItem('skilllink.refreshToken', 'saved');
+  fetch.mockResolvedValueOnce(ok({ accessToken: 'access', refreshToken: 'first-rotation' }));
+  fetch.mockImplementationOnce(async () => {
+    localStorage.setItem('skilllink.refreshToken', 'second-tab-rotation');
+    return ok({ user: { id: 'customer', role: 'CUSTOMER' } });
+  });
+  await restoreSession();
+  expect(localStorage.getItem('skilllink.refreshToken')).toBe('second-tab-rotation');
+});
+it('does not contact refresh when there is no saved token', async () => {
+  await restoreSession();
+  expect(fetch).not.toHaveBeenCalled();
 });
 it('shares one refresh for concurrent expired requests', async () => {
   session.set({ accessToken: 'old', refreshToken: 'refresh' });

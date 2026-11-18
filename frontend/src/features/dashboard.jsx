@@ -5,7 +5,6 @@ import {
   Panel,
   Chip,
   AccountAvatar,
-  Notice,
   Button,
 } from '../components/ui';
 import { title } from '../utils/format';
@@ -19,8 +18,8 @@ export function Account() {
     <>
       <PageTitle
         eyebrow="YOUR ACCOUNT"
-        title="The person behind the projects."
-        description="Your account details and session controls."
+        title="My account"
+        description="Your name, contact details and sign-in settings."
       />
       <div className="two-grid">
         <Panel title="Personal information">
@@ -49,26 +48,15 @@ export function Account() {
               </dd>
             </div>
           </dl>
-          <Notice>
-            Personal account editing is not available in this version.
-            Professionals can edit their separate professional profile.
-          </Notice>
         </Panel>
-        <Panel title="Security & session">
+        <Panel title="Sign-in settings">
           <p className="prose">
-            Your session credentials are held only in this tab’s memory. Closing
-            or reloading the page signs you out. Signing out here revokes the
-            current server session.
+            You stay signed in when you refresh the page. Signing out clears
+            your saved sign-in details.
           </p>
           <Button variant="outline" onClick={() => logout()}>
             Sign out of this session
           </Button>
-          <hr />
-          <h3>Account verification</h3>
-          <p className="muted">
-            Email/phone OTP and password recovery are not connected yet.
-            Professional identity verification remains available separately.
-          </p>
           {user.role === 'WORKER' && (
             <Button to="/work/profile/verification" variant="secondary">
               Professional verification

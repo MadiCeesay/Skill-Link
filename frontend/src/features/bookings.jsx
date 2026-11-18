@@ -31,8 +31,10 @@ import {
   ErrorNotice,
   Field,
   toast,
+  Avatar,
+  PaymentDemoLabel,
 } from '../components/ui';
-import { money, dateTime } from '../utils/format';
+import { money, dateTime, displayName, paymentEventLabel } from '../utils/format';
 import { bookingActions, homeFor } from '../utils/policy';
 import { StartChat } from './messaging';
 import { JobLocationLink } from '../components/JobLocation';
@@ -44,12 +46,12 @@ export function Bookings() {
   return (
     <>
       <PageTitle
-        eyebrow="YOUR PLANS, ALL TOGETHER"
-        title="Good work on the calendar."
+
+        title="Bookings"
         description="Manage schedules, conversations and the next step for every booking."
       >
         <Button to={base + '/proposals'} variant="outline">
-          Direct proposals
+          Offers
           <ArrowUpRight size={17} />
         </Button>
       </PageTitle>
@@ -77,6 +79,11 @@ export function Bookings() {
                         </small>
                       </span>
                       <div className="booking-row-main">
+                        <div className="row booking-person">
+                          <Avatar person={b.counterpart} src={b.counterpart?.profileImage?.url} size="small" />
+                          <strong>{displayName(b.counterpart) || (user.role === 'WORKER' ? 'Customer unavailable' : 'Professional unavailable')}</strong>
+                        </div>
+                        <p><strong>{b.serviceSummary?.name || 'Service unavailable'}</strong></p>
                         <h3>{b.description.slice(0, 80)}</h3>
                         <p className="muted small">
                           {b.serviceArea?.name} · {dateTime(b.scheduledStart)}
@@ -92,8 +99,8 @@ export function Bookings() {
             ) : (
               <Empty
                 icon={CalendarDays}
-                title="Make room for something good"
-                description="Your bookings appear once a direct proposal is accepted or an accepted quote is scheduled."
+                title="No bookings yet"
+                description="Accepted offers become bookings once a time is agreed."
                 action={
                   <Button
                     to={
@@ -138,8 +145,8 @@ export function BookingDetails() {
         {({ booking: b }) => (
           <>
             <PageTitle
-              eyebrow="YOUR BOOKING"
-              title="The plan, from start to finish."
+
+              title="Booking details"
               description={dateTime(b.scheduledStart)}
             >
               <Chip status={b.status} />
@@ -148,6 +155,13 @@ export function BookingDetails() {
             <div className="booking-detail-grid">
               <div className="stack">
                 <Panel title="Your service">
+                  <div className="row booking-person">
+                    <Avatar person={b.counterpart} src={b.counterpart?.profileImage?.url} size="large" />
+                    <div><p className="muted small">{user.role === 'WORKER' ? 'Your customer' : 'Your professional'}</p>
+                      <h2>{displayName(b.counterpart) || (user.role === 'WORKER' ? 'Customer unavailable' : 'Professional unavailable')}</h2>
+                      <p>{b.serviceSummary?.name || 'Service unavailable'}</p>
+                    </div>
+                  </div>
                   <p className="prose">{b.description}</p>
                   <dl className="details">
                     <div>
@@ -173,17 +187,17 @@ export function BookingDetails() {
                       <dd>{money(b.agreedAmountBututs)}</dd>
                     </div>
                   </dl>
-                  <JobLocationLink location={b.location} />
+                  {(user.role === 'CUSTOMER' || ['CONFIRMED', 'IN_PROGRESS', 'WORKER_MARKED_COMPLETED', 'COMPLETED', 'DISPUTED'].includes(b.status)) && <JobLocationLink location={b.location} />}
                   {user.role === 'WORKER' && b.status === 'AWAITING_PAYMENT' && <Notice>Exact job location becomes available after the booking is confirmed.</Notice>}
-                  <Button variant="outline" to={'/professionals/' + b.worker}>View professional profile</Button>
+                  {user.role === 'CUSTOMER' && <Button variant="outline" to={'/professionals/' + b.worker}>View professional profile</Button>}
                 </Panel>
                 <Panel title="Progress">
                   <ol className="timeline">
                     {[
-                      ['AWAITING_PAYMENT', 'Booking arranged', null],
+                      ['AWAITING_PAYMENT', 'Booking arranged', b.createdAt],
                       [
                         'CONFIRMED',
-                        'Payment simulated',
+                        'Payment recorded',
                         payment.data?.payment.paidAt,
                       ],
                       ['IN_PROGRESS', 'Work started', b.startedAt],
@@ -211,7 +225,7 @@ export function BookingDetails() {
                   </ol>
                   {b.status === 'DISPUTED' && (
                     <Notice>
-                      This booking is under dispute review. Simulated funds stay
+                      This booking is under dispute review. Payment stays
                       held until an administrator resolves the case.
                     </Notice>
                   )}
@@ -237,9 +251,6 @@ export function BookingDetails() {
                 <Panel title="Your next step">
                   {actions.includes('pay') && (
                     <>
-                      <Notice>
-                        Simulation only. No real money will be charged.
-                      </Notice>
                       <p className="muted">
                         Your slot is held until{' '}
                         {dateTime(b.reservationExpiresAt)}. Expired reservations
@@ -248,7 +259,7 @@ export function BookingDetails() {
                       <Button
                         to={homeFor(user.role) + '/bookings/' + id + '/payment'}
                       >
-                        Open simulated checkout
+                        Pay for booking
                         <ArrowUpRight size={17} />
                       </Button>
                     </>
@@ -311,7 +322,7 @@ export function BookingDetails() {
                     <Command
                       label="Confirm completion"
                       path={'/bookings/' + id + '/confirm-completion'}
-                      description="Confirm that the work is complete? This releases the simulated payment to the professional."
+                      description="Confirm that the work is complete? This releases the payment to the professional."
                     />
                   )}
                   {actions.includes('dispute') && (
@@ -357,14 +368,15 @@ export function BookingDetails() {
                   {!actions.length && (
                     <p className="muted">
                       {b.status === 'COMPLETED'
-                        ? 'This project is complete. Thank you for making good work happen.'
+                        ? 'This booking is complete.'
                         : b.status === 'CANCELLED'
                           ? 'This booking is closed. Find a professional or create a new request when you’re ready.'
                           : 'There is no action needed from you right now.'}
                     </p>
                   )}
                 </Panel>
-                <Panel title="Simulated payment">
+                <Panel title="Payment">
+                  <PaymentDemoLabel />
                   {payment.data ? (
                     <>
                       <Chip status={payment.data.payment.status} />
@@ -390,7 +402,7 @@ export function BookingDetails() {
                         variant="text"
                         to={homeFor(user.role) + '/bookings/' + id + '/payment'}
                       >
-                        Payment & ledger
+                        Payment history
                         <ArrowUpRight size={15} />
                       </Button>
                     </>
@@ -443,7 +455,7 @@ export function Payment() {
         path: '/payments/bookings/' + id + '/checkout',
         body: { outcome, idempotencyKey: key },
       });
-      toast('Simulation result recorded.');
+      toast('Payment result recorded.');
     } catch (e) {
       setError(e);
     }
@@ -451,10 +463,10 @@ export function Payment() {
   return (
     <>
       <PageTitle
-        eyebrow="SIMULATION ONLY · NO REAL MONEY"
-        title="A clear picture of your payment."
-        description="This demonstration never asks for card, bank or wallet details."
+        title="Payment"
+        description="Check the amount and payment status."
       />
+      <PaymentDemoLabel />
       <QueryState query={booking}>
         {({ booking: b }) => (
           <div className="two-grid">
@@ -472,17 +484,13 @@ export function Payment() {
                 Back to booking
               </Button>
             </Panel>
-            <Panel title="Mock checkout">
-              <Notice>
-                All payment outcomes are simulated. No actual funds are
-                collected, held or released.
-              </Notice>
+            <Panel title="Payment details">
               {query.isPending && <p role="status">Loading payment details…</p>}
               {query.error && query.error.status !== 404 && (
                 <ErrorNotice error={query.error} retry={() => query.refetch()} />
               )}
               {query.error?.status === 404 && (
-                <Notice>No payment simulation has been recorded for this booking.</Notice>
+                <Notice>No payment has been recorded for this booking.</Notice>
               )}
               {p && (
                 <>
@@ -502,7 +510,7 @@ export function Payment() {
               {user.role === 'CUSTOMER' && b.status === 'AWAITING_PAYMENT' && (
                 <form className="form-stack" onSubmit={pay}>
                   <Field
-                    label="Simulation outcome"
+                    label="Payment result"
                     as="select"
                     value={outcome}
                     onChange={(e) => {
@@ -516,8 +524,8 @@ export function Payment() {
                   </Field>
                   <Button type="submit" disabled={action.isPending}>
                     {action.isPending
-                      ? 'Running simulation…'
-                      : 'Run payment simulation'}
+                      ? 'Recording payment…'
+                      : 'Record payment'}
                   </Button>
                   {p && ['PENDING', 'FAILED'].includes(p.status) && (
                     <button
@@ -525,7 +533,7 @@ export function Payment() {
                       className="text-button"
                       onClick={() => {
                         setKey(crypto.randomUUID());
-                        toast('Ready for a new simulation attempt.');
+                        toast('Ready for another payment attempt.');
                       }}
                     >
                       Start a new attempt
@@ -539,7 +547,7 @@ export function Payment() {
         )}
       </QueryState>
       {p && (
-        <Panel title="Simulated payment activity">
+        <Panel title="Payment history">
           <QueryState query={ledger}>
             {(data) => (
               <div>
@@ -547,7 +555,7 @@ export function Payment() {
                   <div className="list-row" key={e.id}>
                     <div>
                       <strong>
-                        {e.type.toLowerCase().replaceAll('_', ' ')}
+                        {paymentEventLabel(e.type)}
                       </strong>
                       <p className="small muted">{dateTime(e.createdAt)}</p>
                     </div>
@@ -570,10 +578,11 @@ export function ReportProblem() {
   return (
     <>
       <PageTitle
-        eyebrow="LET’S TAKE A CLOSER LOOK"
-        title="Something not quite right?"
-        description="Tell us about the issue. Simulated funds remain held while the dispute is reviewed."
+
+        title="Report a problem"
+        description="Tell us about the issue. Payment remains held while the dispute is reviewed."
       />
+      <PaymentDemoLabel />
       <QueryState query={query}>
         {({ booking: b }) =>
           ['CONFIRMED', 'IN_PROGRESS', 'WORKER_MARKED_COMPLETED'].includes(
@@ -627,9 +636,10 @@ export function Dispute() {
   return (
     <>
       <PageTitle
-        title="Your problem report."
-        description="A clear record of the issue and its resolution."
+        title="Problem report"
+        description="Check the report and decision."
       />
+      <PaymentDemoLabel />
       <QueryState query={query}>
         {({ dispute: d }) => (
           <Panel title={d.reason} action={<Chip status={d.status} />}>
@@ -648,8 +658,8 @@ export function Dispute() {
             {d.adminDecision && (
               <Notice>
                 {d.adminDecision === 'REFUND_CUSTOMER'
-                  ? 'Simulated payment refunded to customer.'
-                  : 'Simulated payment released to professional.'}{' '}
+                  ? 'Payment refunded to customer.'
+                  : 'Payment released to professional.'}{' '}
                 {d.decisionReason}
               </Notice>
             )}
