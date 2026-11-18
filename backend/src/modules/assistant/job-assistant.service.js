@@ -6,6 +6,7 @@
 // The customer always reviews and edits the result before anything is posted.
 // See backend/docs/job-assistant.md.
 import { z } from 'zod';
+import mongoose from 'mongoose';
 import { Service } from '../catalog/service.model.js';
 import { Category } from '../catalog/category.model.js';
 import { Booking } from '../bookings/booking.model.js';
@@ -64,7 +65,9 @@ function percentile(sorted, fraction) {
 /** Middle half (25th–75th percentile) of real SkillLink prices for a service in the last year. */
 export async function marketPriceRange(serviceId, now = new Date()) {
   const since = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
-  const rows = await Booking.find({ service: serviceId, status: { $in: PRICED_STATUSES }, createdAt: { $gte: since } })
+  // The app runs Mongoose with sanitizeFilter on, so query operators we write
+  // ourselves must be marked as trusted.
+  const rows = await Booking.find({ service: serviceId, status: mongoose.trusted({ $in: PRICED_STATUSES }), createdAt: mongoose.trusted({ $gte: since }) })
     .select('agreedAmountBututs').limit(1000).lean();
   const amounts = rows.map(r => r.agreedAmountBututs).filter(Number.isFinite).sort((a, b) => a - b);
   if (amounts.length < MIN_BOOKINGS_FOR_MARKET_PRICE) return null;
@@ -113,7 +116,7 @@ export function jobAssistantService(ai, media, fetchImpl = globalThis.fetch) {
       if (text && hasContact(text)) throw new ApiError(400, 'CONTACT_SHARING_BLOCKED', 'Remove phone numbers, emails and links before using the assistant.');
 
       const activeCategories = await Category.find({ isActive: true }).select('_id').lean();
-      const services = await Service.find({ isActive: true, category: { $in: activeCategories.map(c => c._id) } })
+      const services = await Service.find({ isActive: true, category: mongoose.trusted({ $in: activeCategories.map(c => c._id) }) })
         .select('name').sort({ name: 1 }).lean();
       if (!services.length) throw new ApiError(503, 'AI_UNAVAILABLE', 'The assistant is not available. Please describe the job yourself.');
 
