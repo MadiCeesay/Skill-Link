@@ -5,7 +5,7 @@ export function hasContact(value) {
   const numbers = t
     .replace(/\b(?:GMD|bututs?|price|cost)\s*[:=]?\s*\d+(?:[,.]\d+)*/gi, '')
     .replace(
-      /\b\d+(?:\.\d+)?\s*(?:metres?|meters?|mm|cm|kg|bricks?|bags?|units?)\b/gi,
+      /\b\d+(?:[,.]\d+)*\s*(?:dalasis?|metres?|meters?|mm|cm|kg|bricks?|bags?|units?)\b/gi,
       '',
     );
   return (
@@ -13,8 +13,13 @@ export function hasContact(value) {
     /\b(?:wa\.me|whatsapp\.com|facebook\.com|instagram\.com|t\.me|telegram\.me|snapchat\.com|linkedin\.com)\//i.test(
       t,
     ) ||
-    /(?:\+|00)220[\s().-]*[2-9](?:[\s().-]*\d){6}(?!\d)/.test(t) ||
-    /(?:^|[^\d])[235679]\d{2}[ -]?\d{2}[ -]?\d{2}(?!\d)/.test(numbers)
+    // Gambian numbers with the country code. Since 4 September 2026 PURA moved
+    // Africell, Comium and QCell from 7 to 9 digits, so both lengths are blocked.
+    /(?:\+|00)220[\s().-]*[2-9](?:[\s().-]*\d){6}(?:(?:[\s().-]*\d){2})?(?!\d)/.test(t) ||
+    // Old 7-digit local numbers, e.g. 3123456 or 312 34 56.
+    /(?:^|[^\d])[235679]\d{2}[ -]?\d{2}[ -]?\d{2}(?!\d)/.test(numbers) ||
+    // New 9-digit local numbers, also when digits are spaced out, e.g. 877 123 456 or 8 7 7 1 2 3 4 5 6.
+    /(?:^|[^\d])[2-9](?:[\s.-]?\d){8}(?![\s.-]?\d)/.test(numbers)
   );
 }
 export function assertNoContact(text) {
