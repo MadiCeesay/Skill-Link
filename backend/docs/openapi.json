@@ -3664,9 +3664,15 @@
           "updatedAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "counterpart": {
+            "$ref": "#/components/schemas/ParticipantSummary"
+          },
+          "serviceSummary": {
+            "$ref": "#/components/schemas/ParticipantServiceSummary"
           }
         },
-        "description": "Participant/admin view. Exact location/address are returned to the customer; the worker receives them only after payment confirmation. Expired unpaid reservations read as CANCELLED."
+        "description": "Participant/admin view. Exact location/address are returned to the customer; the worker receives them only after payment confirmation. Expired unpaid reservations read as CANCELLED. Participant GET list/detail additionally include counterpart and serviceSummary after resource authorization. Mutation/admin DTOs may omit these optional summaries."
       },
       "DirectProposal": {
         "type": "object",
@@ -3786,7 +3792,8 @@
             "type": "string",
             "enum": [
               "REQUEST_QUOTE",
-              "LISTED_PRICE"
+              "LISTED_PRICE",
+              "NEGOTIATED"
             ]
           },
           "budget": {
@@ -3903,6 +3910,17 @@
           "createdAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "counterpart": {
+            "$ref": "#/components/schemas/ParticipantSummary"
+          },
+          "serviceSummary": {
+            "$ref": "#/components/schemas/ParticipantServiceSummary"
+          },
+          "status": {
+            "type": "string",
+            "nullable": true,
+            "description": "Linked booking lifecycle status where a booking exists; otherwise current proposal/quote status, with lazy expiry. Null for missing context."
           }
         }
       },
@@ -3928,7 +3946,8 @@
               "TEXT",
               "IMAGE",
               "VOICE",
-              "SYSTEM"
+              "SYSTEM",
+              "PRICE_OFFER"
             ]
           },
           "text": {
@@ -3951,6 +3970,9 @@
           "createdAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "priceOffer": {
+            "$ref": "#/components/schemas/ChatPriceOffer"
           }
         }
       },
@@ -4224,7 +4246,8 @@
             "type": "string"
           },
           "message": {
-            "type": "string"
+            "type": "string",
+            "description": "Readable recipient-specific sentence with only authorized participant names, service and short work reference. Historical event types are not displayed as labels."
           },
           "relatedResourceType": {
             "type": "string"
@@ -4310,7 +4333,8 @@
           },
           "acceptedJobs": {
             "type": "integer",
-            "minimum": 0
+            "minimum": 0,
+            "description": "Global public JobRequest count with status QUOTE_ACCEPTED, excluding jobs linked to archived demo bookings. Not a count of direct proposals, bookings, or the current customer's jobs."
           },
           "totalBookings": {
             "type": "integer",
@@ -4646,6 +4670,147 @@
             }
           }
         }
+      },
+      "ParticipantSummary": {
+        "type": "object",
+        "nullable": true,
+        "additionalProperties": false,
+        "description": "Other participant in an authorized booking/conversation. Only names and an owned, permitted PROFILE_IMAGE signed link. No contact details. Null if the account no longer exists.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{24}$"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "profileImage": {
+            "type": "object",
+            "nullable": true,
+            "additionalProperties": false,
+            "properties": {
+              "url": {
+                "type": "string",
+                "format": "uri"
+              },
+              "expiresAt": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "ParticipantServiceSummary": {
+        "type": "object",
+        "nullable": true,
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{24}$"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "ChatPriceOffer": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{24}$"
+          },
+          "conversation": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{24}$"
+          },
+          "proposal": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{24}$"
+          },
+          "sender": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{24}$"
+          },
+          "recipient": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{24}$"
+          },
+          "amountBututs": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "GMD"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "OPEN",
+              "ACCEPTED",
+              "DECLINED",
+              "REPLACED"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "respondedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "conversation",
+          "proposal",
+          "sender",
+          "recipient",
+          "amountBututs",
+          "currency",
+          "status",
+          "createdAt"
+        ]
+      },
+      "ChatPriceWrite": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "amountBututs": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "amountBututs"
+        ]
+      },
+      "ChatPriceResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "decision": {
+            "type": "string",
+            "enum": [
+              "ACCEPTED",
+              "DECLINED"
+            ]
+          }
+        },
+        "required": [
+          "decision"
+        ]
       }
     }
   },
@@ -18680,7 +18845,7 @@
           "Administration"
         ],
         "summary": "List users",
-        "description": "Roles: ADMIN. ",
+        "description": "Roles: ADMIN. Search by first/last name (literal, case-insensitive words) and filter by role. Filters apply before pagination. Contact and security fields are not returned.",
         "security": [
           {
             "bearerAuth": []
@@ -18705,6 +18870,27 @@
               "minimum": 1,
               "maximum": 50,
               "default": 20
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Name search, up to 100 characters. All words must match a first or last name.",
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "role",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "CUSTOMER",
+                "WORKER",
+                "ADMIN"
+              ]
             }
           }
         ],
@@ -21411,6 +21597,203 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/conversations/{id}/price-offers": {
+      "post": {
+        "tags": [
+          "Conversations"
+        ],
+        "summary": "Send or replace a chat price offer",
+        "description": "Roles: CUSTOMER, WORKER. Pending DIRECT_PROPOSAL conversations only. Recipient-only responses. Acceptance transactionally updates the proposal price and posts a system message; the worker subsequently confirms to book. Existing bookings (including paid bookings) cannot receive price offers.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-fA-F0-9]{24}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatPriceWrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Committed price offer and message",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "offer": {
+                          "$ref": "#/components/schemas/ChatPriceOffer"
+                        },
+                        "message": {
+                          "$ref": "#/components/schemas/Message"
+                        }
+                      },
+                      "required": [
+                        "offer",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid price or decision"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Role or worker eligibility denied"
+          },
+          "404": {
+            "description": "Conversation or recipient offer not found"
+          },
+          "409": {
+            "description": "Proposal closed, expired, booked, stale offer, or unavailable schedule"
+          },
+          "429": {
+            "description": "Messaging rate limit"
+          }
+        }
+      }
+    },
+    "/conversations/{id}/price-offers/{offerId}/respond": {
+      "post": {
+        "tags": [
+          "Conversations"
+        ],
+        "summary": "Accept or decline a chat price offer",
+        "description": "Roles: CUSTOMER, WORKER. Pending DIRECT_PROPOSAL conversations only. Recipient-only responses. Acceptance transactionally updates the proposal price and posts a system message; the worker subsequently confirms to book. Existing bookings (including paid bookings) cannot receive price offers.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-fA-F0-9]{24}$"
+            }
+          },
+          {
+            "name": "offerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-fA-F0-9]{24}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatPriceResponse"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Committed price offer and message",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "offer": {
+                          "$ref": "#/components/schemas/ChatPriceOffer"
+                        },
+                        "message": {
+                          "$ref": "#/components/schemas/Message"
+                        }
+                      },
+                      "required": [
+                        "offer",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid price or decision"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Role or worker eligibility denied"
+          },
+          "404": {
+            "description": "Conversation or recipient offer not found"
+          },
+          "409": {
+            "description": "Proposal closed, expired, booked, stale offer, or unavailable schedule"
+          },
+          "429": {
+            "description": "Messaging rate limit"
           }
         }
       }

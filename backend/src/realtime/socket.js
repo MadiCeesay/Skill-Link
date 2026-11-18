@@ -1,7 +1,7 @@
 import { Server } from 'socket.io';
 import { z } from 'zod';
 import { objectId } from '../utils/validation.js';
-import { messageWrite } from '../modules/conversations/conversation.validator.js';
+import { messageWrite, chatPriceWrite, chatPriceResponse } from '../modules/conversations/conversation.validator.js';
 const room = (id) => 'conversation:' + id;
 export function attachSocket(server, app, config) {
   const { auth, conversations } = app.locals.services;
@@ -106,6 +106,18 @@ export function attachSocket(server, app, config) {
         conversations.read(objectId.parse(payload?.conversation), user),
       ),
     );
+    socket.on('price-offer:send', handle(async (payload, user) => {
+      const input = z.object({ conversation: objectId, offer: chatPriceWrite }).strict().parse(payload);
+      const data = await conversations.sendPriceOffer(input.conversation, user, input.offer);
+      await publish(input.conversation, 'price-offer', data);
+      return data;
+    }));
+    socket.on('price-offer:respond', handle(async (payload, user) => {
+      const input = z.object({ conversation: objectId, offerId: objectId, response: chatPriceResponse }).strict().parse(payload);
+      const data = await conversations.respondPriceOffer(input.conversation, input.offerId, user, input.response);
+      await publish(input.conversation, 'price-offer', data);
+      return data;
+    }));
   });
   return io;
 }

@@ -6,7 +6,7 @@ import { validate } from '../../middleware/validate.js';
 import { params, idParams, objectId, query } from '../../utils/validation.js';
 import { marketPagination } from '../jobRequests/job.validator.js';
 import { emptyBodySchema } from '../auth/auth.validator.js';
-import { conversationWrite, messageWrite } from './conversation.validator.js';
+import { conversationWrite, messageWrite, chatPriceWrite, chatPriceResponse } from './conversation.validator.js';
 import { success } from '../../utils/response.js';
 export function conversationRoutes(
   protect,
@@ -80,6 +80,16 @@ export function conversationRoutes(
     async (q, s) =>
       success(s, await service.read(q.validatedParams.id, q.auth.user)),
   );
+  r.post('/conversations/:id/price-offers', params(idParams('id')), limit, validate(chatPriceWrite), async (q, s) => {
+    const data = await service.sendPriceOffer(q.validatedParams.id, q.auth.user, q.validated);
+    await publish(q.validatedParams.id, 'price-offer', data);
+    success(s, data, 201);
+  });
+  r.post('/conversations/:id/price-offers/:offerId/respond', params(z.object({ id: objectId, offerId: objectId }).strict()), limit, validate(chatPriceResponse), async (q, s) => {
+    const data = await service.respondPriceOffer(q.validatedParams.id, q.validatedParams.offerId, q.auth.user, q.validated);
+    await publish(q.validatedParams.id, 'price-offer', data);
+    success(s, data);
+  });
   r.get(
     '/conversations/:id/media/:mediaId/access',
     params(z.object({ id: objectId, mediaId: objectId }).strict()),

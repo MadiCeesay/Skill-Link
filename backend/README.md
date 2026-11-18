@@ -45,6 +45,28 @@ Use dev for watch mode and start for normal operation. Startup validates configu
 
 ## Architecture
 
+### Provision an administrator
+
+In the existing `backend/.env`, set `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_FIRST_NAME` and `ADMIN_LAST_NAME`. The password follows the existing policy: at least eight characters with upper/lowercase and a number, at most 72 UTF-8 bytes. Then run from `backend`:
+
+```powershell
+npm run seed:admin
+```
+
+The command targets `MONGODB_URI`, creates an ACTIVE ADMIN or updates the account matching the normalized email (including promoting an existing customer/worker). It updates the names/password, reactivates the selected account, and invalidates existing tokens when credentials, role or status change. Repeating unchanged settings leaves the account unchanged. No public admin registration is added. Sign in through the normal login page using the configured email/password. Values and password hashes are never printed.
+
+`ADMIN_PHONE_NUMBER` is optional. If omitted, an existing account keeps its phone; a new account receives a stable `+999…` non-contact placeholder to satisfy the existing unique phone field. Provide a real international phone if desired; duplicate phones fail safely. Keep all ADMIN variables in backend operator configuration only.
+
+### Offline demo database
+
+See [Local replica-set demo setup](docs/local-mongodb.md). From the repository root, one command starts MongoDB and automatically initializes its replica set:
+
+```powershell
+docker compose up -d --wait
+```
+
+Use the documented local URI in the backend environment and restart the backend. Your Atlas data and existing configuration are not copied or changed by Compose.
+
 The modular monolith separates routes, controllers, services, validators, and models inside feature modules. Shared middleware handles authentication, RBAC, validation, and errors. src/app.js exports createApp without starting a listener or database connection; server.js owns startup/shutdown.
 
 The auth and users modules preserve Phase 1 behavior. Phase 2 implements workers, catalog, media, verifications, a media provider, and limited administrative audit records. Other reserved module folders remain placeholders. See docs/architecture.md for approved future decisions.
@@ -582,6 +604,16 @@ docker run --rm --env-file .env -p 5000:5000 skilllink-backend:v1
 
 Use a replica-set MongoDB address reachable from the container; `127.0.0.1` inside a container is not the host database. Do not copy `.env` into an image.
 
+
+## Demo data
+
+Structured price offers are available in pending proposal chats. Either participant
+can send an amount and the recipient can accept or decline. See [chat price offers](docs/chat-price-offers.md)
+for transaction checks, booking/payment locks and Socket.IO events.
+
+Run `npm run seed:demo` from `backend` to add repeatable fictional demo accounts and
+booking scenarios. See [demo seed instructions](docs/demo-seed.md) for local credentials,
+optional photos, cleanup scope, and financial-history safeguards.
 
 ## Final V1 verification
 

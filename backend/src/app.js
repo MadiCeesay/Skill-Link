@@ -144,7 +144,7 @@ export function createApp(config, options = {}) {
     ['checkout'],
   );
   app.use('/api', paymentRoutes(protect, payments, options));
-  const conversations = effects(conversationService(media), ['send']);
+  const conversations = effects(conversationService(media, bookingService(config, matching, media)), ['send']);
   app.locals.services = { auth, conversations };
   app.locals.publish = async () => {};
   app.use(

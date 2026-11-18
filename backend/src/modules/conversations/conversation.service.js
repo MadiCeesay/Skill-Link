@@ -1,17 +1,43 @@
 import mongoose from 'mongoose';
-import { Conversation, Message } from './conversation.model.js';
+import { Conversation, Message, ChatPriceOffer } from './conversation.model.js';
+import { priceOfferService } from './price-offer.service.js';
 import { Booking } from '../bookings/booking.model.js';
 import { DirectProposal } from '../bookings/proposal.model.js';
 import { Quote } from '../quotes/quote.model.js';
+import { JobRequest } from '../jobRequests/job.model.js';
+import { participantSummaries } from '../bookings/participant-summary.js';
+import { bookingStatus } from '../bookings/booking.serializer.js';
 import { User } from '../users/user.model.js';
 import { MediaAsset } from '../media/media.model.js';
 import { ApiError } from '../../utils/ApiError.js';
 import { assertNoContact } from './contact.service.js';
 import { conversationDTO, messageDTO } from './conversation.serializer.js';
 import { pageMetadata } from '../discovery/discovery.service.js';
-export function conversationService(media) {
-  async function own(id, user) {
-    const c = await Conversation.findOne({ _id: id, participants: user._id });
+export function conversationService(media, bookings) {
+  async function present(rows, user) {
+    const ids = type => rows.filter(c => c.contextType === type).map(c => c.contextId);
+    const [quotes, proposals, bookings] = await Promise.all([
+      Quote.find({ _id: mongoose.trusted({ $in: ids('QUOTE') }) }).select('customer worker jobRequest status expiresAt').lean(),
+      DirectProposal.find({ _id: mongoose.trusted({ $in: ids('DIRECT_PROPOSAL') }) }).select('customer worker service status expiresAt').lean(),
+      Booking.find({ $or: [
+        { _id: mongoose.trusted({ $in: ids('BOOKING') }) }, { acceptedQuote: mongoose.trusted({ $in: ids('QUOTE') }) }, { directProposal: mongoose.trusted({ $in: ids('DIRECT_PROPOSAL') }) },
+      ] }).select('customer worker service status reservationExpiresAt acceptedQuote directProposal').lean(),
+    ]);
+    const jobs = await JobRequest.find({ _id: mongoose.trusted({ $in: quotes.map(q => q.jobRequest) }) }).select('service').lean();
+    const sources = rows.map(c => {
+      const b = bookings.find(b => String(c.contextId) === String(c.contextType === 'BOOKING' ? b._id : c.contextType === 'QUOTE' ? b.acceptedQuote : b.directProposal));
+      const source = b || (c.contextType === 'QUOTE' ? quotes : proposals).find(s => String(s._id) === String(c.contextId));
+      // Never enrich a mismatched or stale context with another relationship's data.
+      if (!source || String(source.customer) !== String(c.customer) || String(source.worker) !== String(c.worker)) return { customer: c.customer, worker: c.worker };
+      const expired = source.expiresAt <= new Date() && ['PENDING', 'QUOTED'].includes(source.status);
+      return { customer: c.customer, worker: c.worker, service: source.service || jobs.find(j => String(j._id) === String(source.jobRequest))?.service,
+        status: b ? bookingStatus(b) : expired ? 'EXPIRED' : source.status };
+    });
+    const summaries = await participantSummaries(sources, user, media);
+    return rows.map((c, i) => conversationDTO(c, { ...summaries[i], status: sources[i].status || null }));
+  }
+  async function own(id, user, session = null) {
+    const c = await Conversation.findOne({ _id: id, participants: user._id }).session(session);
     if (!c) throw new ApiError(404, 'NOT_FOUND', 'Conversation not found');
     return c;
   }
@@ -37,6 +63,7 @@ export function conversationService(media) {
   }
   return {
     own,
+    ...priceOfferService(own, bookings),
     async create(user, input) {
       const Model = {
         QUOTE: Quote,
@@ -73,7 +100,7 @@ export function conversationService(media) {
         },
         { new: true, upsert: true },
       );
-      return { conversation: conversationDTO(c) };
+      return { conversation: (await present([c], user))[0] };
     },
     async list(user, page) {
       const f = { participants: user._id };
@@ -85,12 +112,12 @@ export function conversationService(media) {
         Conversation.countDocuments(f),
       ]);
       return {
-        conversations: rows.map(conversationDTO),
+        conversations: await present(rows, user),
         pagination: pageMetadata(page.page, page.limit, total),
       };
     },
     async get(id, user) {
-      return { conversation: conversationDTO(await own(id, user)) };
+      return { conversation: (await present([await own(id, user)], user))[0] };
     },
     async history(id, user, page) {
       await own(id, user);
@@ -101,8 +128,9 @@ export function conversationService(media) {
           .limit(page.limit),
         Message.countDocuments({ conversation: id }),
       ]);
+      const offers = await ChatPriceOffer.find({ _id: mongoose.trusted({ $in: rows.filter(m => m.priceOffer).map(m => m.priceOffer) }), conversation: id });
       return {
-        messages: rows.map(messageDTO),
+        messages: rows.map(m => messageDTO(m, offers.find(o => String(o._id) === String(m.priceOffer)))),
         pagination: pageMetadata(page.page, page.limit, total),
       };
     },

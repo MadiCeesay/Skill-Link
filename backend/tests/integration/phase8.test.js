@@ -483,6 +483,25 @@ describe('Phase 8 notifications and admin operations', () => {
     expect(text).not.toContain('email');
     expect(text).not.toContain('phone');
   });
+  it('searches people by literal name and role across paginated results', async () => {
+    const found = await api('get', '/admin/users', admin).query({ q: '  tester WORKER1  ', role: 'WORKER' });
+    expect(found.status).toBe(200);
+    expect(found.body.data.items.map(u => u.id)).toEqual([worker.id]);
+    expect(found.body.data.pagination.total).toBe(1);
+    const none = await api('get', '/admin/users', admin).query({ q: 'WORKER1', role: 'CUSTOMER' });
+    expect(none.body.data.pagination.total).toBe(0);
+    const literal = await api('get', '/admin/users', admin).query({ q: '.*' });
+    expect(literal.body.data.pagination.total).toBe(0);
+    const first = await api('get', '/admin/users', admin).query({ role: 'WORKER', limit: 1 });
+    const next = await api('get', '/admin/users', admin).query({ role: 'WORKER', limit: 1, page: 2 });
+    expect(first.body.data.pagination.total).toBe(3);
+    expect(next.body.data.pagination.total).toBe(3);
+    expect(first.body.data.items[0].id).not.toBe(next.body.data.items[0].id);
+    expect((await api('get', '/admin/users', admin).query({ q: 'x'.repeat(101) })).status).toBe(400);
+    expect((await api('get', '/admin/users', admin).query({ role: 'OWNER' })).status).toBe(400);
+    expect((await api('get', '/admin/users', customer).query({ q: 'WORKER1' })).status).toBe(403);
+    for (const item of found.body.data.items) expect(Object.keys(item).sort()).toEqual(['accountStatus', 'createdAt', 'firstName', 'id', 'lastName', 'role'].sort());
+  });
   it('suspension revokes sessions, hides discovery and records an audit', async () => {
     const r = await api(
       'patch',

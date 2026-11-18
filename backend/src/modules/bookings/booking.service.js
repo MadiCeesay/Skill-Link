@@ -17,6 +17,7 @@ import { transaction } from '../../utils/transaction.js';
 import { ApiError } from '../../utils/ApiError.js';
 import { areaKey } from '../matching/matching.service.js';
 import { bookingDTO, proposalDTO } from './booking.serializer.js';
+import { participantSummaries } from './participant-summary.js';
 import { pageMetadata } from '../discovery/discovery.service.js';
 export const same = (a, b) => String(a) === String(b);
 export async function participantBooking(id, user, session = null) {
@@ -44,7 +45,7 @@ export function bookingService(config, matching, media) {
       serviceArea: p.serviceArea.toObject(), location: p.location?.toObject(), privateAddress: p.privateAddress },
     { scheduledStart: p.scheduledStart, scheduledEnd: p.scheduledEnd }, session);
   }
-  async function create(source, input, session) {
+  async function validateTerms(source, input, session) {
     await lockWorker(source.worker, session);
     if (
       !(await User.exists({
@@ -90,6 +91,9 @@ export function bookingService(config, matching, media) {
         'BOOKING_CONFLICT',
         'The worker already has a reservation or active booking at this time',
       );
+  }
+  async function create(source, input, session) {
+    await validateTerms(source, input, session);
     const [b] = await Booking.create(
       [
         {
@@ -109,6 +113,15 @@ export function bookingService(config, matching, media) {
     return b;
   }
   return {
+    // Internal transaction participant: shares all booking eligibility/schedule checks.
+    async agreeChatPrice(p, amountBututs, session) {
+      await validateTerms({ customer: p.customer, worker: p.worker, service: p.service, serviceArea: p.serviceArea, location: p.location }, { scheduledStart: p.scheduledStart, scheduledEnd: p.scheduledEnd }, session);
+      p.agreedAmountBututs = amountBututs;
+      p.pricingMode = 'NEGOTIATED';
+      p.status = 'PENDING';
+      p.quoteRevision += 1;
+      await p.save({ session });
+    },
     async fromQuote(customer, input) {
       const q = await Quote.findOne({
         _id: input.quote,
@@ -324,7 +337,7 @@ export function bookingService(config, matching, media) {
         ? await Review.findOne({ booking: booking._id, customer: user._id }).select('_id')
         : null;
       return {
-        booking: bookingDTO(booking, user),
+        booking: bookingDTO(booking, user, (await participantSummaries([booking], user, media))[0]),
         reviewEligibility: {
           canReview: customerOwns && booking.status === 'COMPLETED' && !existingReview,
           hasReviewed: Boolean(existingReview),
@@ -341,8 +354,9 @@ export function bookingService(config, matching, media) {
           .limit(page.limit),
         Booking.countDocuments(filter),
       ]);
+      const summaries = await participantSummaries(rows, user, media);
       return {
-        bookings: rows.map((b) => bookingDTO(b, user)),
+        bookings: rows.map((b, i) => bookingDTO(b, user, summaries[i])),
         pagination: pageMetadata(page.page, page.limit, total),
       };
     },

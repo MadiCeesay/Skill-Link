@@ -2,7 +2,7 @@ export const bookingStatus = (b) =>
   b.status === 'AWAITING_PAYMENT' && b.reservationExpiresAt <= new Date()
     ? 'CANCELLED'
     : b.status;
-export function bookingDTO(b, user) {
+export function bookingDTO(b, user, summary = {}) {
   const precise =
     String(b.customer) === String(user._id) ||
     [
@@ -51,6 +51,7 @@ export function bookingDTO(b, user) {
     completionEvidence: b.completionEvidence?.map(String),
     createdAt: b.createdAt,
     updatedAt: b.updatedAt,
+    ...summary,
   };
 }
 export function proposalDTO(p, user) {

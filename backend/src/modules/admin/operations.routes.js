@@ -12,6 +12,10 @@ export const accountStatusWrite = z
     reason: text(1000),
   })
   .strict();
+export const peopleQuery = marketPagination.extend({
+  q: z.string().trim().max(100).optional(),
+  role: z.enum(['CUSTOMER', 'WORKER', 'ADMIN']).optional(),
+});
 export function operationsRoutes(protect, service, options = {}) {
   const r = Router();
   r.use('/admin', protect, authorize('ADMIN'), (_q, s, n) => {
@@ -41,7 +45,7 @@ export function operationsRoutes(protect, service, options = {}) {
     'disputes',
     'reviews',
   ])
-    r.get('/admin/' + name, query(marketPagination), async (q, s) =>
+    r.get('/admin/' + name, query(name === 'users' ? peopleQuery : marketPagination), async (q, s) =>
       success(s, await service[name](q.validatedQuery)),
     );
   r.patch(

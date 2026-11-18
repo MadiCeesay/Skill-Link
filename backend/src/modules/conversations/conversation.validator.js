@@ -7,6 +7,8 @@ export const conversationWrite = z
   })
   .strict();
 const clientMessageId = text(80).regex(/^[A-Za-z0-9_-]+$/);
+export const chatPriceWrite = z.object({ amountBututs: z.number().int().min(1).max(Number.MAX_SAFE_INTEGER) }).strict();
+export const chatPriceResponse = z.object({ decision: z.enum(['ACCEPTED', 'DECLINED']) }).strict();
 export const messageWrite = z.discriminatedUnion('type', [
   z
     .object({ type: z.literal('TEXT'), text: text(2000), clientMessageId })

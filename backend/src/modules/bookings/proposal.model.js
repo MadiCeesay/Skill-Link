@@ -16,7 +16,7 @@ const schema = new mongoose.Schema(
       coordinates: [Number],
     },
     privateAddress: String,
-    pricingMode: { type: String, enum: ['REQUEST_QUOTE', 'LISTED_PRICE'] },
+    pricingMode: { type: String, enum: ['REQUEST_QUOTE', 'LISTED_PRICE', 'NEGOTIATED'] },
     budget: { minAmountBututs: Number, maxAmountBututs: Number },
     attachments: [id('MediaAsset')],
     listedPrice: { type: new mongoose.Schema({ type: String, amountBututs: Number }, { _id: false }), default: undefined },

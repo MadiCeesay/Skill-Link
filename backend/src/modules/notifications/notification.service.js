@@ -9,6 +9,7 @@ import { Verification } from '../verifications/verification.model.js';
 import { Dispute } from '../disputes/dispute.model.js';
 import { ApiError } from '../../utils/ApiError.js';
 import { pageMetadata } from '../discovery/discovery.service.js';
+import { notificationCopy, notificationPresentation } from './notification-copy.js';
 export const notificationDTO = (n) => ({
   id: String(n._id),
   type: n.type,
@@ -29,8 +30,7 @@ export function notificationService(email) {
             recipient,
             eventKey: key,
             type,
-            title: 'SkillLink update',
-            message: type.replaceAll('_', ' ').toLowerCase(),
+            ...notificationCopy(type),
             relatedResourceType: resourceType,
             relatedResourceId: id,
           },
@@ -167,8 +167,9 @@ export function notificationService(email) {
           .limit(page.limit),
         Notification.countDocuments(f),
       ]);
+      const copy = await notificationPresentation(rows, user);
       return {
-        notifications: rows.map(notificationDTO),
+        notifications: rows.map((n, i) => ({ ...notificationDTO(n), ...copy[i] })),
         pagination: pageMetadata(page.page, page.limit, total),
       };
     },
@@ -179,7 +180,7 @@ export function notificationService(email) {
         { new: true },
       );
       if (!n) throw new ApiError(404, 'NOT_FOUND', 'Notification not found');
-      return { notification: notificationDTO(n) };
+      return { notification: { ...notificationDTO(n), ...(await notificationPresentation([n], user))[0] } };
     },
     async readAll(user) {
       await Notification.updateMany(

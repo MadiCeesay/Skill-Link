@@ -14,7 +14,7 @@ import { disputeDTO, reviewDTO } from '../bookings/lifecycle.serializer.js';
 import { paymentDTO, ledgerDTO } from '../payments/payment.serializer.js';
 import { transaction } from '../../utils/transaction.js';
 import { ApiError } from '../../utils/ApiError.js';
-import { pageMetadata } from '../discovery/discovery.service.js';
+import { pageMetadata, escapeRegex } from '../discovery/discovery.service.js';
 const userDTO = (u) => ({
   id: String(u._id),
   firstName: u.firstName,
@@ -60,7 +60,11 @@ export function operationsService() {
   }
   return {
     async users(page) {
-      return list(User, {}, page, userDTO);
+      const filter = page.role ? { role: page.role } : {};
+      if (page.q?.trim()) filter.$and = page.q.trim().split(/\s+/).map(word => ({
+        $or: ['firstName', 'lastName'].map(field => ({ [field]: mongoose.trusted({ $regex: escapeRegex(word), $options: 'i' }) })),
+      }));
+      return list(User, filter, page, userDTO);
     },
     async status(id, admin, input) {
       return transaction(async (session) => {

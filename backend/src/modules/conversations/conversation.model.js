@@ -28,11 +28,12 @@ const message = new mongoose.Schema(
     sender: id('User', true),
     type: {
       type: String,
-      enum: ['TEXT', 'IMAGE', 'VOICE', 'SYSTEM'],
+      enum: ['TEXT', 'IMAGE', 'VOICE', 'SYSTEM', 'PRICE_OFFER'],
       required: true,
     },
     text: { type: String, maxlength: 2000 },
     media: id('MediaAsset'),
+    priceOffer: id('ChatPriceOffer'),
     readBy: [id('User')],
     clientMessageId: { type: String, maxlength: 80, required: true },
   },
@@ -44,3 +45,14 @@ message.index(
   { unique: true },
 );
 export const Message = mongoose.model('Message', message);
+const priceOffer = new mongoose.Schema({
+  conversation: id('Conversation', true), proposal: id('DirectProposal', true),
+  sender: id('User', true), recipient: id('User', true),
+  amountBututs: { type: Number, required: true, min: 1, max: Number.MAX_SAFE_INTEGER, validate: Number.isSafeInteger },
+  currency: { type: String, enum: ['GMD'], default: 'GMD' },
+  status: { type: String, enum: ['OPEN', 'ACCEPTED', 'DECLINED', 'REPLACED'], default: 'OPEN' },
+  respondedAt: Date,
+}, { timestamps: true, strict: 'throw' });
+priceOffer.index({ proposal: 1 }, { unique: true, partialFilterExpression: { status: 'OPEN' }, name: 'one_open_chat_price_per_proposal' });
+priceOffer.index({ conversation: 1, createdAt: -1 });
+export const ChatPriceOffer = mongoose.model('ChatPriceOffer', priceOffer);
