@@ -215,7 +215,7 @@ export function createApp(config, options = {}) {
   app.use('/api', quoteRoutes(protect, quotes, options));
   // AI job assistant: switched off unless GEMINI_API_KEY is set.
   const ai = options.aiProvider ?? (config.GEMINI_API_KEY
-    ? new GeminiProvider({ apiKey: config.GEMINI_API_KEY, model: config.GEMINI_MODEL })
+    ? new GeminiProvider({ apiKey: config.GEMINI_API_KEY, model: config.GEMINI_MODEL, thinkingLevel: config.GEMINI_THINKING })
     : new UnavailableAiProvider());
   app.use('/api', assistantRoutes(protect, jobAssistantService(ai, media, options.mediaFetch), options));
   app.use('/api/auth', authRoutes(auth, options));

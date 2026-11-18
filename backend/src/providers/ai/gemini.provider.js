@@ -16,8 +16,10 @@ export class GeminiProvider {
    * @param {string} options.model one model, or several separated by commas: the first is
    *   preferred and the others are backups used when it is busy or unavailable.
    */
-  constructor({ apiKey, model, fetchImpl = globalThis.fetch, timeoutMs = 30000, log = true }) {
+  constructor({ apiKey, model, thinkingLevel = 'low', fetchImpl = globalThis.fetch, timeoutMs = 30000, log = true }) {
     this.apiKey = apiKey;
+    // Gemini 3 models "think" before answering; 'low' keeps drafting fast. 'off' sends no setting.
+    this.thinkingLevel = thinkingLevel === 'off' ? null : thinkingLevel;
     this.log = log;
     this.models = String(model).split(',').map(name => name.trim()).filter(Boolean);
     this.fetch = fetchImpl;
@@ -30,17 +32,29 @@ export class GeminiProvider {
    * @param {{ system: string, parts: Array<{text:string}|{inlineData:{mimeType:string,data:string}}> }} request
    */
   async generateJson({ system, parts }) {
-    const body = JSON.stringify({
+    const request = thinking => JSON.stringify({
       systemInstruction: { parts: [{ text: system }] },
       contents: [{ role: 'user', parts }],
       // Low temperature keeps answers consistent; JSON mode avoids free text.
-      generationConfig: { temperature: 0.2, responseMimeType: 'application/json' },
+      generationConfig: {
+        temperature: 0.2, responseMimeType: 'application/json',
+        ...(thinking ? { thinkingConfig: { thinkingLevel: thinking } } : {}),
+      },
     });
     let lastError;
     // Try the preferred model first; if Google reports it busy, missing or slow, try the next one.
     for (const model of this.models) {
+      const started = Date.now();
       try {
-        return await this.callModel(model, body);
+        let result;
+        try { result = await this.callModel(model, request(this.thinkingLevel)); }
+        catch (error) {
+          // A model that does not accept this thinking setting: ask again with its default.
+          if (!this.thinkingLevel || !/thinking/i.test(error.reason || '')) throw error;
+          result = await this.callModel(model, request(null));
+        }
+        if (this.log) console.info('[assistant] ' + model + ' answered in ' + ((Date.now() - started) / 1000).toFixed(1) + ' s');
+        return result;
       } catch (error) {
         lastError = error;
         // Logged without any customer content, so failures can be diagnosed from the terminal.

@@ -119,6 +119,7 @@ export function JobAssistant({ onApply }) {
           <Button type="button" onClick={ask} disabled={!canAsk}>
             <Sparkles size={16} /> {busy ? 'Writing your request…' : 'Write it for me'}
           </Button>
+          {busy && <p className="muted small" role="status">Reading your description and checking SkillLink prices. This usually takes a few seconds.</p>}
           <p className="muted small">Don’t include phone numbers or names. Your words and photos are sent to an AI service to write the draft.</p>
       </div>
       {draft && (

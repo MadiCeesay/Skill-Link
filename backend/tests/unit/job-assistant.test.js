@@ -32,6 +32,22 @@ describe('Gemini provider', () => {
     await expect(provider.generateJson({ system: '', parts: [] })).rejects.toMatchObject({ code: 'AI_PROVIDER_ERROR' });
     expect(fetchImpl).toHaveBeenCalledTimes(1);
   });
+  it('asks Gemini to think briefly so drafts come back quickly', async () => {
+    const fetchImpl = vi.fn(async () => ok(answer('{"title":"Fix tap"}')));
+    await new GeminiProvider({ apiKey: 'k', model: 'm-1', fetchImpl, log: false }).generateJson({ system: '', parts: [] });
+    expect(JSON.parse(fetchImpl.mock.calls[0][1].body).generationConfig.thinkingConfig).toEqual({ thinkingLevel: 'low' });
+    fetchImpl.mockClear();
+    await new GeminiProvider({ apiKey: 'k', model: 'm-1', thinkingLevel: 'off', fetchImpl, log: false }).generateJson({ system: '', parts: [] });
+    expect(JSON.parse(fetchImpl.mock.calls[0][1].body).generationConfig).not.toHaveProperty('thinkingConfig');
+  });
+  it('retries without the thinking setting when a model rejects it', async () => {
+    const fetchImpl = vi.fn()
+      .mockResolvedValueOnce({ ok: false, status: 400, json: async () => ({ error: { message: 'Thinking level is not supported for this model.' } }) })
+      .mockResolvedValueOnce(ok(answer('{"title":"Fix tap"}')));
+    const provider = new GeminiProvider({ apiKey: 'k', model: 'm-1', fetchImpl, log: false });
+    expect(await provider.generateJson({ system: '', parts: [] })).toEqual({ title: 'Fix tap' });
+    expect(JSON.parse(fetchImpl.mock.calls[1][1].body).generationConfig).not.toHaveProperty('thinkingConfig');
+  });
   it('accepts JSON wrapped in code fences', () => {
     expect(parseJson('```json\n{"a":1}\n```')).toEqual({ a: 1 });
   });

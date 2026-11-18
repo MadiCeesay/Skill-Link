@@ -32,6 +32,8 @@ export function loadConfig(input = process.env) {
     ELEVENLABS_API_KEY: optionalCredential,
     ELEVENLABS_MODEL: z.string().regex(/^[a-z0-9][a-z0-9_.-]{2,63}(,[a-z0-9][a-z0-9_.-]{2,63}){0,3}$/).default('scribe_v2,scribe_v1'),
     // One model, or a comma-separated list where later models are backups when the first is busy.
+    // How long Gemini 3 thinks before answering: low (fast, default), medium, high or off.
+    GEMINI_THINKING: z.enum(['off', 'minimal', 'low', 'medium', 'high']).default('low'),
     GEMINI_MODEL: z.string().regex(/^[a-z0-9][a-z0-9.-]{2,63}(,[a-z0-9][a-z0-9.-]{2,63}){0,3}$/).default('gemini-3.8-flash,gemini-3.5-flash-lite,gemini-3.5-flash'),
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
     PORT: z.coerce.number().int().min(1).max(65535).default(5000),
