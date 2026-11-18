@@ -10,9 +10,15 @@ export class GeminiProvider {
   name = 'gemini';
   available = true;
 
+  /**
+   * @param {object} options
+   * @param {string} options.apiKey
+   * @param {string} options.model one model, or several separated by commas: the first is
+   *   preferred and the others are backups used when it is busy or unavailable.
+   */
   constructor({ apiKey, model, fetchImpl = globalThis.fetch, timeoutMs = 25000 }) {
     this.apiKey = apiKey;
-    this.model = model;
+    this.models = String(model).split(',').map(name => name.trim()).filter(Boolean);
     this.fetch = fetchImpl;
     this.timeoutMs = timeoutMs;
   }
@@ -23,32 +29,54 @@ export class GeminiProvider {
    * @param {{ system: string, parts: Array<{text:string}|{inlineData:{mimeType:string,data:string}}> }} request
    */
   async generateJson({ system, parts }) {
+    const body = JSON.stringify({
+      systemInstruction: { parts: [{ text: system }] },
+      contents: [{ role: 'user', parts }],
+      // Low temperature keeps answers consistent; JSON mode avoids free text.
+      generationConfig: { temperature: 0.2, responseMimeType: 'application/json' },
+    });
+    let lastError;
+    // Try the preferred model first; if Google reports it busy, missing or slow, try the next one.
+    for (const model of this.models) {
+      try {
+        return await this.callModel(model, body);
+      } catch (error) {
+        lastError = error;
+        if (!error.retryWithAnotherModel) break;
+      }
+    }
+    throw lastError.apiError;
+  }
+
+  async callModel(model, body) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), this.timeoutMs);
     let response;
     try {
-      response = await this.fetch(GEMINI_URL + encodeURIComponent(this.model) + ':generateContent', {
+      response = await this.fetch(GEMINI_URL + encodeURIComponent(model) + ':generateContent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-goog-api-key': this.apiKey },
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: system }] },
-          contents: [{ role: 'user', parts }],
-          // Low temperature keeps answers consistent; JSON mode avoids free text.
-          generationConfig: { temperature: 0.2, responseMimeType: 'application/json' },
-        }),
+        body,
         signal: controller.signal,
       });
     } catch {
-      throw new ApiError(503, 'AI_UNAVAILABLE', 'The assistant is not responding right now. Please describe the job yourself.');
+      throw failure(new ApiError(503, 'AI_UNAVAILABLE', 'The assistant is not responding right now. Please describe the job yourself.'), true);
     } finally {
       clearTimeout(timer);
     }
-    if (response.status === 429) throw new ApiError(503, 'AI_BUSY', 'The assistant is busy. Please try again in a minute.');
-    if (!response.ok) throw new ApiError(502, 'AI_PROVIDER_ERROR', 'The assistant could not help with this request.');
-    const body = await response.json().catch(() => null);
-    const text = body?.candidates?.[0]?.content?.parts?.map(part => part.text || '').join('') || '';
-    return parseJson(text);
+    // 429 rate limit, 503 overloaded, 404 model retired: another model may still work.
+    if ([429, 503, 404, 500].includes(response.status))
+      throw failure(new ApiError(503, 'AI_BUSY', 'The assistant is busy. Please try again in a minute.'), true);
+    if (!response.ok) throw failure(new ApiError(502, 'AI_PROVIDER_ERROR', 'The assistant could not help with this request.'), false);
+    const result = await response.json().catch(() => null);
+    const text = result?.candidates?.[0]?.content?.parts?.map(part => part.text || '').join('') || '';
+    try { return parseJson(text); }
+    catch (error) { throw failure(error, true); }
   }
+}
+
+function failure(apiError, retryWithAnotherModel) {
+  return { apiError, retryWithAnotherModel };
 }
 
 // Accepts plain JSON or JSON wrapped in ``` fences.

@@ -18,6 +18,20 @@ describe('Gemini provider', () => {
     expect(body.generationConfig.responseMimeType).toBe('application/json');
     expect(body.systemInstruction.parts[0].text).toBe('rules');
   });
+  it('falls back to the next model when the first is overloaded', async () => {
+    const fetchImpl = vi.fn()
+      .mockResolvedValueOnce({ ok: false, status: 503 })
+      .mockResolvedValueOnce(ok(answer('{"title":"Fix tap"}')));
+    const provider = new GeminiProvider({ apiKey: 'k', model: 'busy-model, backup-model', fetchImpl });
+    expect(await provider.generateJson({ system: '', parts: [] })).toEqual({ title: 'Fix tap' });
+    expect(fetchImpl.mock.calls.map(([url]) => url.split('/models/')[1])).toEqual(['busy-model:generateContent', 'backup-model:generateContent']);
+  });
+  it('does not retry other models for a bad request', async () => {
+    const fetchImpl = vi.fn(async () => ({ ok: false, status: 400 }));
+    const provider = new GeminiProvider({ apiKey: 'k', model: 'a-1,b-2', fetchImpl });
+    await expect(provider.generateJson({ system: '', parts: [] })).rejects.toMatchObject({ code: 'AI_PROVIDER_ERROR' });
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
   it('accepts JSON wrapped in code fences', () => {
     expect(parseJson('```json\n{"a":1}\n```')).toEqual({ a: 1 });
   });
