@@ -34,6 +34,6 @@ try {
   }
 } catch (error) {
   // Configuration errors list field names only; driver errors may contain credentials.
-  console.error(error.message.startsWith('Invalid environment') || error.message.startsWith('JWT ') || error.message.startsWith('Access lifetime') || error.message.startsWith('Production frontend') ? error.message : 'Startup failed: check database connectivity and configuration');
+  console.error(error.message.startsWith('Invalid environment') || error.message.startsWith('JWT ') || error.message.startsWith('Access lifetime') || error.message.startsWith('Production frontend') || error.message.startsWith('PAYMENT_PROVIDER') ? error.message : 'Startup failed: check database connectivity and configuration');
   await shutdown('startup failure', 1);
 }
