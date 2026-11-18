@@ -578,7 +578,7 @@ select:focus-visible {
 }
 .category-list {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(8, 1fr);
   padding: 25px 0;
   gap: 20px;
 }

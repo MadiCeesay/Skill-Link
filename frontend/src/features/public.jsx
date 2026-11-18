@@ -173,7 +173,7 @@ export function Home() {
           {catalog.error && (
             <div className="catalog-feedback"><ErrorNotice error={catalog.error} retry={catalog.refetch} /></div>
           )}
-          {services.slice(0, 6).map((c) => {
+          {services.slice(0, 8).map((c) => {
             const { Icon, key } = servicePresentation(c);
             return (
               <Link to={'/professionals?service=' + c.id} key={c.id} data-service-kind={key}>
