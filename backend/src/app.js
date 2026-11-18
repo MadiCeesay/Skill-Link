@@ -11,6 +11,7 @@ import { lifecycleRoutes } from './modules/bookings/lifecycle.routes.js';
 import { paymentRoutes } from './modules/payments/payment.routes.js';
 import { paymentService } from './modules/payments/payment.service.js';
 import { MockPaymentProvider } from './providers/payments/mock.provider.js';
+import { ModemPayProvider } from './providers/payments/modempay.provider.js';
 import { conversationService } from './modules/conversations/conversation.service.js';
 import { conversationRoutes } from './modules/conversations/conversation.routes.js';
 import { availabilityRoutes } from './modules/availability/availability.routes.js';
@@ -92,6 +93,12 @@ export function createApp(config, options = {}) {
       },
     }),
   );
+  // Modem Pay webhooks need the exact raw body to check the signature, so this route
+  // is registered before the JSON parser. The service is attached further down.
+  app.post('/api/payments/modempay/webhook', express.raw({ type: '*/*', limit: '256kb' }), async (req, res) => {
+    await app.locals.payments.handleWebhook(Buffer.isBuffer(req.body) ? req.body.toString('utf8') : '', req.get('x-modem-signature'));
+    success(res, { received: true });
+  });
   app.use(express.json({ limit: '16kb' }));
   app.get('/api/health', (_req, res) => success(res, { status: 'ok' }));
   app.get('/api/ready', (_req, res) => {
@@ -140,13 +147,22 @@ export function createApp(config, options = {}) {
       options,
     ),
   );
+  if (config.PAYMENT_PROVIDER === 'modempay' && !config.MODEMPAY_SECRET_KEY && !options.paymentProvider)
+    throw new Error('PAYMENT_PROVIDER=modempay needs MODEMPAY_SECRET_KEY');
+  const paymentProvider = options.paymentProvider ?? (config.PAYMENT_PROVIDER === 'modempay'
+    ? new ModemPayProvider({
+        secretKey: config.MODEMPAY_SECRET_KEY,
+        webhookSecret: config.MODEMPAY_WEBHOOK_SECRET,
+        amountUnit: config.MODEMPAY_AMOUNT_UNIT,
+        frontendOrigin: config.FRONTEND_ORIGIN,
+        callbackUrl: config.PUBLIC_API_URL ? config.PUBLIC_API_URL.replace(/\/$/, '') + '/api/payments/modempay/webhook' : undefined,
+      })
+    : new MockPaymentProvider());
   const payments = effects(
-    paymentService(
-      config,
-      options.paymentProvider ?? new MockPaymentProvider(),
-    ),
-    ['checkout'],
+    paymentService(config, paymentProvider),
+    ['checkout', 'verifyProviderPayment', 'handleWebhook'],
   );
+  app.locals.payments = payments;
   app.use('/api', paymentRoutes(protect, payments, options));
   // Voice-note transcripts: switched off unless ELEVENLABS_API_KEY is set.
   const transcriber = options.transcriber ?? (config.ELEVENLABS_API_KEY

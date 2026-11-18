@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Link,
   useParams,
   useNavigate,
+  useSearchParams,
 } from 'react-router-dom';
 import {
   CalendarDays,
@@ -444,21 +445,52 @@ export function Payment() {
     [key, setKey] = useState(() => crypto.randomUUID()),
     [error, setError] = useState(null),
     [outcome, setOutcome] = useState('SUCCESS'),
-    action = useAction();
+    [search, setSearch] = useSearchParams(),
+    providerQuery = useApi('/payments/provider'),
+    action = useAction(),
+    verify = useAction(),
+    verified = useRef(false);
   const p = query.data?.payment,
-    ledger = useApi(p ? '/payments/' + p.id + '/ledger' : null);
+    ledger = useApi(p ? '/payments/' + p.id + '/ledger' : null),
+    live = providerQuery.data?.redirects === true,
+    returned = search.get('modempay');
+  // Back from Modem Pay: ask the server to confirm the result with Modem Pay.
+  useEffect(() => {
+    if (returned !== 'return' || verified.current) return;
+    verified.current = true;
+    verify.mutateAsync({ path: '/payments/bookings/' + id + '/verify' })
+      .then((r) => {
+        const status = r?.payment?.status;
+        toast(status === 'HELD' ? 'Payment received. Your booking is confirmed.'
+          : status === 'FAILED' ? 'The payment did not go through.'
+          : 'Payment is still processing. Check again in a moment.');
+      })
+      .catch(setError)
+      .finally(() => { query.refetch(); booking.refetch(); setSearch({}, { replace: true }); });
+  }, [returned]); // eslint-disable-line react-hooks/exhaustive-deps
   async function pay(e) {
     e.preventDefault();
     setError(null);
     try {
-      await action.mutateAsync({
+      const result = await action.mutateAsync({
         path: '/payments/bookings/' + id + '/checkout',
-        body: { outcome, idempotencyKey: key },
+        body: live ? { idempotencyKey: key } : { outcome, idempotencyKey: key },
       });
+      if (live && result?.redirectUrl) {
+        window.location.assign(result.redirectUrl);
+        return;
+      }
       toast('Payment result recorded.');
     } catch (e) {
       setError(e);
     }
+  }
+  async function checkAgain() {
+    setError(null);
+    try {
+      await verify.mutateAsync({ path: '/payments/bookings/' + id + '/verify' });
+    } catch (e) { setError(e); }
+    query.refetch(); booking.refetch();
   }
   return (
     <>
@@ -466,7 +498,10 @@ export function Payment() {
         title="Payment"
         description="Check the amount and payment status."
       />
-      <PaymentDemoLabel />
+      {live ? (
+        <p className="small muted payment-demo-label">Modem Pay test mode · use test wallets or cards, no real money moves.</p>
+      ) : <PaymentDemoLabel />}
+      {returned === 'cancelled' && <Notice>Payment was cancelled. You can try again when ready.</Notice>}
       <QueryState query={booking}>
         {({ booking: b }) => (
           <div className="two-grid">
@@ -509,6 +544,19 @@ export function Payment() {
               )}
               {user.role === 'CUSTOMER' && b.status === 'AWAITING_PAYMENT' && (
                 <form className="form-stack" onSubmit={pay}>
+                  {live ? (
+                    <>
+                      <p className="small muted">You will be sent to Modem Pay to pay with Wave, Afrimoney, QMoney, APS or a card, then brought back here.</p>
+                      <Button type="submit" disabled={action.isPending || verify.isPending}>
+                        {action.isPending ? 'Opening Modem Pay…' : 'Pay ' + money(b.agreedAmountBututs) + ' with Modem Pay'}
+                      </Button>
+                      {p?.status === 'PENDING' && (
+                        <button type="button" className="text-button" onClick={checkAgain} disabled={verify.isPending}>
+                          {verify.isPending ? 'Checking…' : 'I already paid, check again'}
+                        </button>
+                      )}
+                    </>
+                  ) : (<>
                   <Field
                     label="Payment result"
                     as="select"
@@ -539,6 +587,7 @@ export function Payment() {
                       Start a new attempt
                     </button>
                   )}
+                  </>)}
                 </form>
               )}
               {error && <ErrorNotice error={error} />}

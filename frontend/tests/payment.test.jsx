@@ -47,3 +47,27 @@ it('shows payment authorization failures and allows the read to be retried', asy
   fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
   expect(fetcher.mock.calls.length).toBeGreaterThan(before);
 });
+
+it('sends the customer to Modem Pay when the live provider is active', async () => {
+  const assign = vi.fn();
+  vi.stubGlobal('location', { ...window.location, assign });
+  session.set({ user: { id: 'customer', role: 'CUSTOMER' } });
+  const fetcher = vi.fn(async (url) => {
+    const path = String(url);
+    const json = (status, body) => new Response(JSON.stringify({ success: status < 400, ...body }), { status, headers: { 'Content-Type': 'application/json' } });
+    if (path.endsWith('/payments/provider')) return json(200, { data: { provider: 'modempay', redirects: true } });
+    if (path.endsWith('/checkout')) return json(200, { data: { redirectUrl: 'https://test.checkout.modempay.com/pi_1', payment: { id: 'p1', status: 'PENDING' } } });
+    if (path.includes('/payments/bookings/')) return json(404, { error: { code: 'NOT_FOUND', message: 'Payment not found' } });
+    if (path.includes('/bookings/')) return json(200, { data: { booking: { id: 'b1', description: 'Fix roof', agreedAmountBututs: 65000, status: 'AWAITING_PAYMENT', scheduledStart: new Date().toISOString() } } });
+    return json(404, { error: { code: 'NOT_FOUND', message: 'x' } });
+  });
+  vi.stubGlobal('fetch', fetcher);
+  render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><AuthProvider><MemoryRouter initialEntries={['/app/bookings/b1/payment']}>
+    <Routes><Route path="/app/bookings/:id/payment" element={<Payment />} /></Routes>
+  </MemoryRouter></AuthProvider></QueryClientProvider>);
+  fireEvent.click(await screen.findByRole('button', { name: /with Modem Pay/ }));
+  await vi.waitFor(() => expect(assign).toHaveBeenCalledWith('https://test.checkout.modempay.com/pi_1'));
+  expect(screen.getByText(/Modem Pay test mode/)).toBeInTheDocument();
+  expect(screen.queryByRole('combobox', { name: 'Payment result' })).not.toBeInTheDocument();
+  vi.unstubAllGlobals();
+});

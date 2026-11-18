@@ -33,6 +33,14 @@ export function paymentRoutes(protect, service, options = {}) {
         await service.checkout(q.validatedParams.id, q.auth.user, q.validated),
       ),
   );
+  r.get('/payments/provider', authorize('CUSTOMER', 'WORKER', 'ADMIN'), (q, s) => success(s, service.providerInfo()));
+  r.post(
+    '/payments/bookings/:id/verify',
+    authorize('CUSTOMER'),
+    params(idParams('id')),
+    limit,
+    async (q, s) => success(s, await service.verifyProviderPayment(q.validatedParams.id, q.auth.user)),
+  );
   r.get(
     '/payments/bookings/:id',
     authorize('CUSTOMER', 'WORKER'),

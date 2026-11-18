@@ -6,6 +6,7 @@ export const checkoutWrite = z
       .min(8)
       .max(80)
       .regex(/^[A-Za-z0-9_-]+$/),
-    outcome: z.enum(['SUCCESS', 'FAILURE', 'PENDING']),
+    // Only the simulated provider takes an outcome; Modem Pay reports the real result.
+    outcome: z.enum(['SUCCESS', 'FAILURE', 'PENDING']).optional(),
   })
   .strict();

@@ -11,7 +11,7 @@ export const paymentDTO = (p) => ({
   provider: p.provider,
   providerReference: p.providerReference,
   status: p.status,
-  simulated: true,
+  simulated: p.provider !== 'modempay',
   paidAt: p.paidAt,
   heldAt: p.heldAt,
   releasedAt: p.releasedAt,
@@ -26,6 +26,6 @@ export const ledgerDTO = (e) => ({
   type: e.type,
   amountBututs: e.amountBututs,
   currency: e.currency,
-  simulated: true,
+  simulated: p.provider !== 'modempay',
   createdAt: e.createdAt,
 });

@@ -11,7 +11,6 @@ export function loadConfig(input = process.env) {
     TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(5).default(0),
     EMAIL_PROVIDER: z.literal('disabled').default('disabled'),
     COMMISSION_BASIS_POINTS: z.coerce.number().int().min(0).max(10000).default(1000),
-    PAYMENT_PROVIDER: z.literal('mock').default('mock'),
     BOOKING_RESERVATION_MINUTES: z.coerce.number().int().min(1).max(60).default(15),
     DISCOVERY_DEFAULT_RADIUS_KM: z.coerce.number().int().min(1).max(500).default(25),
     DISCOVERY_MAX_RADIUS_KM: z.coerce.number().int().min(1).max(500).default(200),
@@ -19,6 +18,14 @@ export function loadConfig(input = process.env) {
     CLOUDINARY_CLOUD_NAME: optionalCredential,
     CLOUDINARY_API_KEY: optionalCredential,
     CLOUDINARY_API_SECRET: optionalCredential,
+    // Payments: 'mock' records a chosen result (demos, tests); 'modempay' uses Modem Pay checkout.
+    PAYMENT_PROVIDER: z.enum(['mock', 'modempay']).default('mock'),
+    MODEMPAY_SECRET_KEY: optionalCredential,
+    MODEMPAY_WEBHOOK_SECRET: optionalCredential,
+    // How Modem Pay reads amounts: whole dalasi (GMD) or bututs.
+    MODEMPAY_AMOUNT_UNIT: z.enum(['GMD', 'BUTUT']).default('GMD'),
+    // Public address of this API, so Modem Pay can send webhooks (e.g. https://skilllink-api.onrender.com).
+    PUBLIC_API_URL: z.preprocess(v => v === '' ? undefined : v, z.string().url().optional()),
     // Optional: switches on the AI job description assistant (Google Gemini).
     GEMINI_API_KEY: optionalCredential,
     // Optional: switches on automatic voice-note transcripts (ElevenLabs Scribe).

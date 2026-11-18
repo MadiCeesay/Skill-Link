@@ -21,7 +21,7 @@ const schema = new mongoose.Schema(
     workerAmountBututs: money,
     commissionBasisPoints: { type: Number, min: 0, max: 10000, required: true },
     currency: { type: String, enum: ['GMD'], default: 'GMD' },
-    provider: { type: String, enum: ['mock'], required: true },
+    provider: { type: String, enum: ['mock', 'modempay'], required: true },
     providerReference: String,
     status: {
       type: String,
@@ -47,10 +47,12 @@ const attempt = new mongoose.Schema(
     key: { type: String, required: true },
     outcome: {
       type: String,
-      enum: ['SUCCESS', 'FAILURE', 'PENDING'],
+      // REDIRECT: the customer was sent to a real provider's checkout page.
+      enum: ['SUCCESS', 'FAILURE', 'PENDING', 'REDIRECT'],
       required: true,
     },
     resultStatus: { type: String, required: true },
+    redirectUrl: { type: String, maxlength: 500 },
     providerReference: { type: String, required: true },
   },
   { timestamps: { createdAt: true, updatedAt: false }, strict: 'throw' },
