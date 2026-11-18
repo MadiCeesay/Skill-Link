@@ -34,7 +34,11 @@ export function conversationService(media, bookings, voice = {}) {
       const { url } = await media.link(asset, 120);
       const response = await fetchMedia(url);
       if (!response?.ok) throw new Error('voice note could not be downloaded');
-      const result = await transcriber.transcribe({ buffer: Buffer.from(await response.arrayBuffer()), mimeType: asset.mimeType });
+      const result = await transcriber.transcribe({
+        buffer: Buffer.from(await response.arrayBuffer()),
+        mimeType: asset.mimeType,
+        languageCode: m.spokenLanguage,
+      });
       const text = result.text.slice(0, 4000);
       const conversation = await Conversation.findById(m.conversation);
       // Spoken phone numbers are kept out of the chat just like typed ones, until payment.
@@ -211,8 +215,10 @@ export function conversationService(media, bookings, voice = {}) {
         );
       try {
         const transcribe = input.type === 'VOICE' && transcriber?.available;
+        const { language, ...message } = input;
         const m = await Message.create({
-          ...input,
+          ...message,
+          ...(language ? { spokenLanguage: language } : {}),
           conversation: id,
           sender: user._id,
           readBy: [user._id],

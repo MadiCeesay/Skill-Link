@@ -20,15 +20,18 @@ export class ElevenLabsTranscriber {
   }
 
   /**
-   * @param {{ buffer: Buffer, mimeType: string }} audio
+   * @param {{ buffer: Buffer, mimeType: string, languageCode?: string }} audio
+   *   languageCode (ISO 639-3, e.g. "wol") skips automatic detection, which often
+   *   mistakes short Gambian Wolof clips for other languages.
    * @returns {Promise<{ text: string, languageCode: string|null, model: string }>}
    */
-  async transcribe({ buffer, mimeType }) {
+  async transcribe({ buffer, mimeType, languageCode }) {
     let lastReason = 'no model configured';
     for (const model of this.models) {
       const form = new FormData();
       form.append('model_id', model);
       form.append('tag_audio_events', 'false');
+      if (languageCode) form.append('language_code', languageCode);
       form.append('file', new Blob([buffer], { type: mimeType }), 'voice-note.' + (EXTENSION[mimeType] || 'ogg'));
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), this.timeoutMs);

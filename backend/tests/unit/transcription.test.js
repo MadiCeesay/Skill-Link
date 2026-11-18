@@ -54,3 +54,18 @@ describe('ElevenLabs transcriber', () => {
     expect(new UnavailableTranscriber().available).toBe(false);
   });
 });
+
+describe('spoken language hint', () => {
+  it('tells ElevenLabs the language when the sender chose one', async () => {
+    const fetchImpl = vi.fn(async () => ({ ok: true, status: 200, json: async () => ({ text: 'Sama kër gi dafa tooy', language_code: 'wol' }) }));
+    const t = new ElevenLabsTranscriber({ apiKey: 'k', model: 'scribe_v2', fetchImpl, log: false });
+    await t.transcribe({ buffer: Buffer.from([1]), mimeType: 'audio/webm', languageCode: 'wol' });
+    expect(fetchImpl.mock.calls[0][1].body.get('language_code')).toBe('wol');
+  });
+  it('lets ElevenLabs detect the language otherwise', async () => {
+    const fetchImpl = vi.fn(async () => ({ ok: true, status: 200, json: async () => ({ text: 'hi', language_code: 'eng' }) }));
+    const t = new ElevenLabsTranscriber({ apiKey: 'k', model: 'scribe_v2', fetchImpl, log: false });
+    await t.transcribe({ buffer: Buffer.from([1]), mimeType: 'audio/webm' });
+    expect(fetchImpl.mock.calls[0][1].body.has('language_code')).toBe(false);
+  });
+});

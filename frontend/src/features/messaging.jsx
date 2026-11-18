@@ -401,6 +401,14 @@ function Composer({ id }) {
     setPreview(url);
     return () => URL.revokeObjectURL(url);
   }, [audio]);
+  // The language the sender speaks in voice notes, remembered on this device.
+  const [spokenLanguage, setSpokenLanguage] = useState(() => {
+    try { return localStorage.getItem('skilllink.voiceLanguage') || ''; } catch { return ''; }
+  });
+  function chooseLanguage(value) {
+    setSpokenLanguage(value);
+    try { localStorage.setItem('skilllink.voiceLanguage', value); } catch { /* private mode */ }
+  }
   async function send(body) {
     await action.mutateAsync({
       path: '/conversations/' + id + '/messages',
@@ -426,7 +434,7 @@ function Composer({ id }) {
         file,
         type === 'VOICE' ? 'VOICE_NOTE' : 'CHAT_IMAGE',
       );
-      await send({ type, media: media.id });
+      await send({ type, media: media.id, ...(type === 'VOICE' && spokenLanguage ? { language: spokenLanguage } : {}) });
       if (type === 'VOICE') setAudio(null);
     } catch (e) {
       setError(e);
@@ -519,6 +527,15 @@ function Composer({ id }) {
       ) : audio ? (
         <div className="recording-bar">
           <audio controls src={preview} />
+          <label className="voice-language">
+            <span>I’m speaking</span>
+            <select value={spokenLanguage} onChange={(e) => chooseLanguage(e.target.value)} disabled={busy}>
+              <option value="">Detect automatically</option>
+              <option value="wol">Wolof</option>
+              <option value="eng">English</option>
+              <option value="fra">French</option>
+            </select>
+          </label>
           <Button disabled={busy} onClick={() => fileMessage(audio, 'VOICE')}>
             {busy ? 'Sending…' : 'Send voice note'}
             <Send size={16} />
@@ -599,9 +616,16 @@ function Composer({ id }) {
   );
 }
 
-// Spoken-language names for the codes ElevenLabs returns (ISO 639-1 or 639-3).
-const LANGUAGES = { en: 'English', eng: 'English', wo: 'Wolof', wol: 'Wolof', fr: 'French', fra: 'French',
-  ff: 'Fula', ful: 'Fula', mnk: 'Mandinka', man: 'Mandinka', ar: 'Arabic', ara: 'Arabic' };
+// Spoken-language name for any code ElevenLabs returns (ISO 639-1 or 639-3).
+const LANGUAGE_FALLBACK = { mnk: 'Mandinka', wol: 'Wolof', ful: 'Fula' };
+function languageName(code) {
+  if (!code) return '';
+  try {
+    const name = new Intl.DisplayNames(['en'], { type: 'language' }).of(code);
+    if (name && name.toLowerCase() !== code.toLowerCase()) return name;
+  } catch { /* unknown code */ }
+  return LANGUAGE_FALLBACK[code] || code.toUpperCase();
+}
 
 // Automatic text version of a voice note, so it can be read without playing it.
 function VoiceTranscript({ conversationId, message }) {
@@ -632,7 +656,7 @@ function VoiceTranscript({ conversationId, message }) {
   return (
     <div className="voice-transcript">
       <p>{t.text}</p>
-      <small className="muted">Automatic transcript{t.languageCode && LANGUAGES[t.languageCode] ? ' · ' + LANGUAGES[t.languageCode] : ''} · may contain errors</small>
+      <small className="muted">Automatic transcript{t.languageCode ? ' · ' + languageName(t.languageCode) : ''} · may contain errors</small>
     </div>
   );
 }

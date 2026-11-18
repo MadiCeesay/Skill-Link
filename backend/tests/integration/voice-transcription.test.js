@@ -54,7 +54,7 @@ describe('Voice-note transcripts', () => {
     const sent = await sendVoice(app, customer);
     expect(sent.status, JSON.stringify(sent.body)).toBe(201);
     expect(sent.body.data.message.transcript).toEqual({ status: 'PENDING' });
-    expect(transcriber.transcribe).toHaveBeenCalledWith({ buffer: Buffer.from([7, 7, 7]), mimeType: 'audio/ogg' });
+    expect(transcriber.transcribe).toHaveBeenCalledWith({ buffer: Buffer.from([7, 7, 7]), mimeType: 'audio/ogg', languageCode: undefined });
     const list = await request(app).get('/api/conversations/' + conversation.id + '/messages').set('Authorization', 'Bearer ' + await login(app, worker));
     expect(list.body.data.messages[0].transcript).toEqual({ status: 'DONE', text: 'Water is coming through my ceiling when it rains.', languageCode: 'wol' });
   });
@@ -95,6 +95,19 @@ describe('Voice-note transcripts', () => {
     const r = await request(app).post('/api/conversations/' + conversation.id + '/messages/' + sent.body.data.message.id + '/transcript')
       .set('Authorization', 'Bearer ' + await login(app, stranger)).send({});
     expect(r.status).toBe(404);
+  });
+
+  it('passes the language the sender chose to the transcriber', async () => {
+    const transcriber = transcriberSaying('Sama kër gi dafa tooy bu taw bi ñëwee');
+    const app = appWith(transcriber);
+    const r = await request(app).post('/api/conversations/' + conversation.id + '/messages').set('Authorization', 'Bearer ' + await login(app, customer))
+      .send({ type: 'VOICE', media: voice.id, clientMessageId: 'voice-wolof', language: 'wol' });
+    expect(r.status, JSON.stringify(r.body)).toBe(201);
+    expect(r.body.data.message.spokenLanguage).toBe('wol');
+    expect(transcriber.transcribe.mock.calls[0][0].languageCode).toBe('wol');
+    const bad = await request(app).post('/api/conversations/' + conversation.id + '/messages').set('Authorization', 'Bearer ' + await login(app, customer))
+      .send({ type: 'VOICE', media: voice.id, clientMessageId: 'voice-bad', language: 'xx' });
+    expect(bad.status).toBe(400);
   });
 
   it('sends voice notes without a transcript when transcription is switched off', async () => {

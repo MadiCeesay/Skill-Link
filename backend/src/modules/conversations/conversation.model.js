@@ -36,6 +36,8 @@ const message = new mongoose.Schema(
     priceOffer: id('ChatPriceOffer'),
     readBy: [id('User')],
     clientMessageId: { type: String, maxlength: 80, required: true },
+    // Language the sender chose for a voice note; omitted means "detect automatically".
+    spokenLanguage: { type: String, enum: ['eng', 'wol', 'fra'] },
     // Automatic transcript of a voice note, filled in the background after sending.
     transcript: {
       type: new mongoose.Schema({

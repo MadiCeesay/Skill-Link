@@ -4505,3 +4505,19 @@ td .actions {
 .voice-transcript small {
   font-size: 11px;
 }
+
+/* Spoken-language choice next to a recorded voice note */
+.voice-language {
+  display: grid;
+  gap: 2px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.voice-language select {
+  font: inherit;
+  font-size: 13px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  border: 1px solid var(--line, #e5e5e5);
+  background: #fff;
+}
