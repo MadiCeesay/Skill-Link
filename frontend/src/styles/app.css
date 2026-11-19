@@ -4530,3 +4530,34 @@ td .actions {
   display: grid;
   gap: 10px;
 }
+/* Two-step job posting: assistant first, then where, when and budget */
+.job-steps {
+  display: flex;
+  gap: 10px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex-wrap: wrap;
+}
+.job-steps li {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line, #e7ddd2);
+  font-size: 12px;
+  color: var(--muted);
+}
+.job-steps li[aria-current='step'] {
+  background: #ffe5c6;
+  border-color: #f2b77a;
+  color: #6b3b12;
+  font-weight: 600;
+}
+.job-skip {
+  margin-top: 10px;
+}
+.job-summary h3 {
+  margin: 0 0 4px;
+}
+.job-summary .prose {
+  white-space: pre-line;
+}

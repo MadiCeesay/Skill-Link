@@ -241,8 +241,16 @@ function JobForm({ existing: j }) {
     [budgetMin, setBudgetMin] = useState(gmdInput(j?.budget?.minAmountBututs)),
     [budgetMax, setBudgetMax] = useState(gmdInput(j?.budget?.maxAmountBututs)),
     [error, setError] = useState(null),
+    assistant = useApi(j ? null : '/assistant/status'),
+    // New requests start with the AI assistant (step 1), then where, when and budget (step 2).
+    aiOn = !j && assistant.data?.jobDraft === true,
+    [step, setStep] = useState('describe'),
+    [fromAssistant, setFromAssistant] = useState(false),
+    [editWork, setEditWork] = useState(false),
     action = useAction(),
     navigate = useNavigate();
+  const showDescribe = aiOn && step === 'describe',
+    showSummary = aiOn && step === 'details' && fromAssistant && !editWork;
   async function save(e) {
     e.preventDefault();
     setError(null);
@@ -299,15 +307,51 @@ function JobForm({ existing: j }) {
       setBudgetMax(gmdInput(draft.priceRange.maxBututs));
     }
     setAssistantAttachments(photoIds);
-    toast('Added to the form. Now choose where and when, then post your request.');
-    // Take the customer straight to the form, where location and timing are still to fill.
-    requestAnimationFrame(() => formTop.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    setFromAssistant(true);
+    setEditWork(false);
+    setStep('details');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
+  const serviceName = catalog.services.find((sv) => sv.id === selectedService)?.name;
   return (
     <form onSubmit={save} className="form-stack">
-      {!j && <JobAssistant onApply={applyDraft} />}
+      {aiOn && (
+        <ol className="job-steps" aria-label="Steps">
+          <li aria-current={step === 'describe' ? 'step' : undefined}>1 · Describe the job</li>
+          <li aria-current={step === 'details' ? 'step' : undefined}>2 · Where, when and budget</li>
+        </ol>
+      )}
+      {aiOn && (
+        <div hidden={!showDescribe}>
+          <JobAssistant onApply={applyDraft} />
+          <p className="small muted job-skip">
+            Prefer to write it yourself?{' '}
+            <button type="button" className="text-button" onClick={() => { setFromAssistant(false); setStep('details'); }}>
+              Fill in the form instead
+            </button>
+          </p>
+        </div>
+      )}
+      {!showDescribe && showSummary && (
+        <Panel title="Your job">
+          <div className="job-summary">
+            <h3>{title}</h3>
+            <p className="muted small">{serviceName || 'Choose a service'}{assistantAttachments.length ? ' · ' + assistantAttachments.length + ' photo' + (assistantAttachments.length === 1 ? '' : 's') : ''}</p>
+            <p className="prose">{description}</p>
+            <div className="row wrap">
+              <button type="button" className="text-button" onClick={() => setEditWork(true)}>Edit the details</button>
+              <button type="button" className="text-button" onClick={() => setStep('describe')}>← Back to the assistant</button>
+            </div>
+          </div>
+          <input type="hidden" name="service" value={selectedService} />
+          <input type="hidden" name="title" value={title} />
+          <input type="hidden" name="description" value={description} />
+        </Panel>
+      )}
+      {!showDescribe && (<>
       <div className="two-grid" ref={formTop}>
         <div className="stack">
+          {!showSummary && (
           <Panel
             title="01 / The work"
             description="A clear description helps the right people respond."
@@ -372,6 +416,7 @@ function JobForm({ existing: j }) {
               </div>
             ))}
           </Panel>
+          )}
           <Panel title="02 / A budget that works for you">
             <Field
               label="Budget approach"
@@ -488,6 +533,7 @@ function JobForm({ existing: j }) {
           <ArrowUpRight size={17} />
         </Button>
       </div>
+      </>)}
     </form>
   );
 }
