@@ -12,6 +12,7 @@ import { paymentRoutes } from './modules/payments/payment.routes.js';
 import { paymentService } from './modules/payments/payment.service.js';
 import { MockPaymentProvider } from './providers/payments/mock.provider.js';
 import { ModemPayProvider } from './providers/payments/modempay.provider.js';
+import { SmsToProvider, DisabledSmsProvider } from './providers/sms/smsto.provider.js';
 import { conversationService } from './modules/conversations/conversation.service.js';
 import { conversationRoutes } from './modules/conversations/conversation.routes.js';
 import { availabilityRoutes } from './modules/availability/availability.routes.js';
@@ -120,8 +121,15 @@ export function createApp(config, options = {}) {
       : new UnavailableMediaProvider());
   const media = mediaService(provider);
   const matching = matchingService(config.DISCOVERY_MAX_RADIUS_KM ?? 200);
+  if (config.SMS_PROVIDER === 'smsto' && !config.SMSTO_API_KEY && !options.smsProvider)
+    throw new Error('SMS_PROVIDER=smsto needs SMSTO_API_KEY');
+  const smsProvider = options.smsProvider ?? (config.SMS_PROVIDER === 'smsto'
+    ? new SmsToProvider({ apiKey: config.SMSTO_API_KEY, senderId: config.SMSTO_SENDER_ID })
+    : new DisabledSmsProvider());
   const notifications = notificationService(
     options.emailProvider ?? new DisabledEmailProvider(),
+    smsProvider,
+    config.FRONTEND_ORIGIN,
   );
   const effects = (service, names) => notifying(service, names, notifications);
   app.use('/api', notificationRoutes(protect, notifications));

@@ -18,6 +18,10 @@ export function loadConfig(input = process.env) {
     CLOUDINARY_CLOUD_NAME: optionalCredential,
     CLOUDINARY_API_KEY: optionalCredential,
     CLOUDINARY_API_SECRET: optionalCredential,
+    // SMS alerts for important events (offers, bookings, completion). 'disabled' sends none.
+    SMS_PROVIDER: z.enum(['disabled', 'smsto']).default('disabled'),
+    SMSTO_API_KEY: optionalCredential,
+    SMSTO_SENDER_ID: z.preprocess(v => v === '' ? undefined : v, z.string().max(11).optional()),
     // Payments: 'mock' records a chosen result (demos, tests); 'modempay' uses Modem Pay checkout.
     PAYMENT_PROVIDER: z.enum(['mock', 'modempay']).default('mock'),
     MODEMPAY_SECRET_KEY: optionalCredential,

@@ -10,6 +10,7 @@ import { Dispute } from '../disputes/dispute.model.js';
 import { ApiError } from '../../utils/ApiError.js';
 import { pageMetadata } from '../discovery/discovery.service.js';
 import { notificationCopy, notificationPresentation } from './notification-copy.js';
+import { DisabledSmsProvider, smsText } from '../../providers/sms/smsto.provider.js';
 export const notificationDTO = (n) => ({
   id: String(n._id),
   type: n.type,
@@ -20,10 +21,10 @@ export const notificationDTO = (n) => ({
   readAt: n.readAt,
   createdAt: n.createdAt,
 });
-export function notificationService(email) {
+export function notificationService(email, sms = new DisabledSmsProvider(), appUrl = '') {
   return {
     async emit(recipient, type, resourceType, id, key) {
-      const n = await Notification.findOneAndUpdate(
+      const result = await Notification.findOneAndUpdate(
         { recipient, eventKey: key },
         {
           $setOnInsert: {
@@ -35,8 +36,17 @@ export function notificationService(email) {
             relatedResourceId: id,
           },
         },
-        { new: true, upsert: true },
+        { new: true, upsert: true, includeResultMetadata: true },
       );
+      const n = result.value;
+      const isNew = !result.lastErrorObject?.updatedExisting;
+      // SMS alerts: only for a few important events, only the first time, never blocking.
+      const text = sms.available && isNew ? smsText(type, appUrl) : null;
+      if (text) {
+        User.findById(recipient).select('phoneNumber').lean()
+          .then((user) => user?.phoneNumber && sms.send({ to: user.phoneNumber, message: text }))
+          .catch((error) => console.warn('[sms] ' + type + ' alert not sent: ' + error.message));
+      }
       // Optional email is supplementary; provider failures never change marketplace success.
       if (
         [
