@@ -38,7 +38,7 @@ export function quoteService(matching, media) {
       const [quotes, total] = await Promise.all([Quote.find(filter).sort({ createdAt: -1, _id: -1 }).skip((input.page - 1) * input.limit).limit(input.limit), Quote.countDocuments(filter)]);
       const jobs = await JobRequest.find({ _id: mongoose.trusted({ $in: quotes.map(q => q.jobRequest) }) });
       const byId = new Map(jobs.map(j => [String(j._id), j]));
-      return { quotes: quotes.map(q => quoteDTO(q, byId.get(String(q.jobRequest)))), pagination: pageMetadata(input.page, input.limit, total) };
+      return { quotes: quotes.map(q => { const job = byId.get(String(q.jobRequest)); return { ...quoteDTO(q, job), jobSummary: job ? { title: job.title, area: job.serviceArea?.name } : null }; }), pagination: pageMetadata(input.page, input.limit, total) };
     },
     async own(id, worker) { const q = await owned(id, worker); return { quote: quoteDTO(q, await JobRequest.findById(q.jobRequest)) }; },
     async change(id, worker, input, withdraw = false) {

@@ -872,10 +872,12 @@ export function Quotes() {
                 {data.quotes.map((q) => (
                   <Panel
                     key={q.id}
-                    title={money(q.proposedAmountBututs)}
+                    title={q.jobSummary?.title || 'Your offer'}
                     action={<Chip status={q.status} />}
                   >
-                    <p className="prose">{q.message || 'Your service offer'}</p>
+                    <p className="small muted">{q.jobSummary?.area}</p>
+                    <strong className="quote-price">{money(q.proposedAmountBututs)}</strong>
+                    <p className="prose clamp">{q.message || 'Your service offer'}</p>
                     <p className="muted small">
                       Sent {date(q.createdAt)} ·{' '}
                       {q.estimatedDurationMinutes || '—'} minutes estimated

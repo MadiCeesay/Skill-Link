@@ -43,6 +43,7 @@ import {
   title,
   localInput,
   toUTC,
+  displayName,
 } from '../utils/format';
 import { Account } from './dashboard';
 export function ProfessionalWorkspace() {
@@ -722,7 +723,7 @@ export function Availability() {
         description="Set your weekly hours and time off in Gambian local time."
       />
       {profile.data && (
-        <Panel title="Available now">
+        <Panel title="Available now" className="inline-form-panel">
           <ActionForm
             path="/availability/available-now"
             method="PATCH"
@@ -1020,9 +1021,10 @@ export function Earnings() {
                 data.bookings.map((b) => (
                   <div className="list-row" key={b.id}>
                     <div>
-                      <strong>{b.description.slice(0, 80)}</strong>
+                      <strong>{(b.serviceSummary?.name || 'Booking') + (displayName(b.counterpart) ? ' · ' + displayName(b.counterpart) : '')}</strong>
                       <p className="small muted">{date(b.scheduledStart)}</p>
                     </div>
+                    <strong className="list-amount">{money(b.agreedAmountBututs)}</strong>
                     <Chip status={b.status} />
                     <Button
                       variant="outline"

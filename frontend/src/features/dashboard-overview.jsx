@@ -293,14 +293,13 @@ export function RoleDashboard() {
       <div className="overview-operational-grid overview-priority">
         <Panel title={worker ? 'Your worker profile' : 'Next booking'}>
           {worker ? <>
-          <div className="row"><AccountAvatar person={user} size="large" /><div><h3>{user.firstName} {user.lastName}</h3><p className="muted">{worker ? 'Keep your work hours up to date.' : 'Keep invitations, messages and bookings together.'}</p></div></div>
+          <div className="row"><AccountAvatar person={user} /><div><h3>{user.firstName} {user.lastName}</h3><p className="muted">{worker ? 'Keep your work hours up to date.' : 'Keep invitations, messages and bookings together.'}</p></div></div>
           {worker && professional && <div className="actions"><span className="small muted">Identity verification</span><Chip status={professional.verificationSummary.status} /><Chip status={professional.profileVisibility} /><Button to="/work/availability" variant="outline">Manage availability</Button></div>}
           {draftProfile && <Notice><p><strong>Your professional profile is still a draft.</strong> Identity approval does not publish it. Publish your profile to appear in professional search and access matched opportunities.</p>
             <div className="actions"><Command label="Publish profile" path="/workers/me/profile" method="PATCH" body={{ profileVisibility: 'PUBLIC' }}
               description="Make your professional profile visible to customers? Your profession, bio, services and service areas must be complete. Identity approval is still required for marketplace work." />
               <Button to="/work/profile" variant="outline">Edit professional profile</Button></div></Notice>}
           </> : <NextBooking query={bookings} user={user} base={base} />}
-          {worker && <div className="actions"><Button to={base + '/messages'} variant="outline">Messages</Button><Button to={base + '/notifications'} variant="outline">Notifications</Button></div>}
         </Panel>
         <Panel title={worker ? 'Offers received' : 'Offers'} action={<SeeAll to={base + '/proposals'}>View offers</SeeAll>}>
           <QueryState query={proposals}>{data => {
@@ -405,7 +404,7 @@ export function RoleDashboard() {
           <BookingTimeline query={bookings} base={base} />
         </Panel>
       </div>
-      <div className={'overview-lower-grid' + (worker ? '' : ' two')}>
+      <div className="overview-lower-grid two">
         <Panel
           title={worker ? 'Work & reputation' : 'Booking activity'}
           action={
@@ -499,7 +498,8 @@ export function RoleDashboard() {
             </QueryState>
           )}
         </Panel>
-        <Panel title={worker ? 'Earnings balance' : 'Needs your attention'}>
+        {!worker && (
+        <Panel title="Needs your attention">
           {worker ? (
             <QueryState query={financial}>
               {(data) => (
@@ -570,6 +570,7 @@ export function RoleDashboard() {
             </p>
           )}
         </Panel>
+        )}
         {worker && (
         <Panel className="overview-finance" title="Earnings summary">
           <SimulatedFinance query={financial} />
