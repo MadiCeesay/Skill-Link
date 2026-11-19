@@ -491,19 +491,6 @@ function JobForm({ existing: j }) {
               defaultValue={j?.serviceArea.name}
               placeholder="e.g. Brikama"
             />
-            <Field
-              label="Region (optional)"
-              name="region"
-              maxLength={100}
-              defaultValue={j?.serviceArea.region}
-            />
-            <Field
-              label="Private address (optional)"
-              name="privateAddress"
-              maxLength={500}
-              defaultValue={j?.privateAddress}
-              hint="Not shown in worker opportunity listings."
-            />
             <JobLocation value={location} onChange={setLocation} />
             <Field
               label="Preferred date (optional)"
@@ -518,12 +505,15 @@ function JobForm({ existing: j }) {
               defaultValue={j?.preferredTimeNote}
               placeholder="e.g. Morning preferred"
             />
-            <Field
-              label="Request expiry (optional)"
-              name="expiresAt"
-              type="datetime-local"
-              hint="Defaults to 7 days; maximum 30 days."
-            />
+            <details className="more-options" open={Boolean(j?.serviceArea.region || j?.privateAddress)}>
+              <summary>More options</summary>
+              <div className="form-stack">
+                <Field label="Region" name="region" maxLength={100} defaultValue={j?.serviceArea.region} />
+                <Field label="Private address" name="privateAddress" maxLength={500} defaultValue={j?.privateAddress}
+                  hint="Not shown in worker opportunity listings." />
+                <Field label="Request expiry" name="expiresAt" type="datetime-local" hint="Defaults to 7 days; maximum 30 days." />
+              </div>
+            </details>
           </Panel>
           <Notice>
             Your brief can be edited until the first offer arrives. After that,
@@ -593,7 +583,7 @@ export function JobDetails() {
               <div className="two-grid">
                 <Panel title="Work details">
                   <p className="prose">{j.description}</p>
-                  <dl className="details">
+                  <dl className="fact-grid">
                     <div>
                       <dt>Budget</dt>
                       <dd>{budget(j.budget)}</dd>
@@ -693,17 +683,19 @@ const quoteFields = [
     label: 'A note for the customer',
     as: 'textarea',
     maxLength: 1500,
-    rows: 4,
+    rows: 3,
+    placeholder: 'What you will do, and whether materials are included',
   },
   {
     name: 'duration',
-    label: 'Estimated duration · minutes (optional)',
+    label: 'Estimated duration · minutes',
     type: 'number',
     min: 15,
     max: 43200,
+    more: true,
   },
-  { name: 'date', label: 'Proposed date (optional)', type: 'date' },
-  { name: 'note', label: 'Scheduling note (optional)', maxLength: 300 },
+  { name: 'date', label: 'Proposed date', type: 'date', more: true },
+  { name: 'note', label: 'Scheduling note', maxLength: 300, more: true, placeholder: 'e.g. I can come this afternoon' },
 ];
 function quoteBody(v) {
   return {

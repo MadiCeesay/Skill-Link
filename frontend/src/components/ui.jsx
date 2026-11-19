@@ -379,9 +379,8 @@ export function ActionForm({
       setError(err);
     }
   }
-  return (
-    <form onSubmit={send} className="form-stack">
-      {fields.map((f) => (
+  // Fields marked `more: true` are folded under "More options" to keep forms short.
+  const renderField = (f) => (
         <Field
           key={f.name}
           {...f}
@@ -398,7 +397,18 @@ export function ActionForm({
             </option>
           ))}
         </Field>
-      ))}
+      ),
+    main = fields.filter((f) => !f.more),
+    more = fields.filter((f) => f.more);
+  return (
+    <form onSubmit={send} className="form-stack">
+      {main.map(({ more: _more, ...f }) => renderField(f))}
+      {more.length > 0 && (
+        <details className="more-options" open={more.some((f) => initial[f.name])}>
+          <summary>More options</summary>
+          <div className="form-stack">{more.map(({ more: _more, ...f }) => renderField(f))}</div>
+        </details>
+      )}
       {children}
       {error && <ErrorNotice error={error} />}
       <Button type="submit" disabled={action.isPending}>

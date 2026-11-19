@@ -36,6 +36,7 @@ import {
   PaymentDemoLabel,
 } from '../components/ui';
 import { money, dateTime, displayName, paymentEventLabel } from '../utils/format';
+const timeOnly = (d) => (d ? new Date(d).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '');
 import { bookingActions, homeFor, paymentOpen } from '../utils/policy';
 import { StartChat } from './messaging';
 import { JobLocationLink } from '../components/JobLocation';
@@ -146,110 +147,35 @@ export function BookingDetails() {
         {({ booking: b }) => (
           <>
             <PageTitle
-
-              title="Booking details"
-              description={dateTime(b.scheduledStart)}
+              title={b.serviceSummary?.name || 'Booking details'}
+              description={(displayName(b.counterpart) ? (user.role === 'WORKER' ? 'For ' : 'With ') + displayName(b.counterpart) + ' · ' : '') + dateTime(b.scheduledStart) + ' · ' + money(b.agreedAmountBututs)}
             >
               <Chip status={b.status} />
               <StartChat type="BOOKING" id={id} />
             </PageTitle>
+            <ol className="stepper" aria-label="Booking progress">
+              {[
+                ['AWAITING_PAYMENT', 'Booked', b.createdAt],
+                ['CONFIRMED', 'Paid', payment.data?.payment.paidAt],
+                ['IN_PROGRESS', 'Started', b.startedAt],
+                ['WORKER_MARKED_COMPLETED', 'Marked done', b.workerCompletedAt],
+                ['COMPLETED', 'Confirmed', b.completedAt],
+              ].map(([s, t, d]) => (
+                <li key={s} className={d ? 'done' : b.status === s ? 'current' : ''} aria-current={b.status === s ? 'step' : undefined}>
+                  <span className="dot">{d ? '✓' : ''}</span>
+                  <strong>{t}</strong>
+                  <small>{d ? dateTime(d) : b.status === s ? 'Now' : ''}</small>
+                </li>
+              ))}
+            </ol>
+            {b.status === 'DISPUTED' && (
+              <Notice>
+                This booking is under dispute review. Payment stays held until an administrator resolves the case.
+              </Notice>
+            )}
             <div className="booking-detail-grid">
               <div className="stack">
-                <Panel title="Your service">
-                  <div className="row booking-person">
-                    <Avatar person={b.counterpart} src={b.counterpart?.profileImage?.url} size="large" />
-                    <div><p className="muted small">{user.role === 'WORKER' ? 'Your customer' : 'Your professional'}</p>
-                      <h2>{displayName(b.counterpart) || (user.role === 'WORKER' ? 'Customer unavailable' : 'Professional unavailable')}</h2>
-                      <p>{b.serviceSummary?.name || 'Service unavailable'}</p>
-                    </div>
-                  </div>
-                  <p className="prose">{b.description}</p>
-                  <dl className="details">
-                    <div>
-                      <dt>Scheduled start</dt>
-                      <dd>{dateTime(b.scheduledStart)}</dd>
-                    </div>
-                    <div>
-                      <dt>Scheduled end</dt>
-                      <dd>{dateTime(b.scheduledEnd)}</dd>
-                    </div>
-                    <div>
-                      <dt>General area</dt>
-                      <dd>{b.serviceArea?.name}</dd>
-                    </div>
-                    {b.privateAddress && (
-                      <div>
-                        <dt>Private booking address</dt>
-                        <dd>{b.privateAddress}</dd>
-                      </div>
-                    )}
-                    <div>
-                      <dt>Agreed amount</dt>
-                      <dd>{money(b.agreedAmountBututs)}</dd>
-                    </div>
-                  </dl>
-                  {(user.role === 'CUSTOMER' || ['CONFIRMED', 'IN_PROGRESS', 'WORKER_MARKED_COMPLETED', 'COMPLETED', 'DISPUTED'].includes(b.status)) && <JobLocationLink location={b.location} />}
-                  {user.role === 'WORKER' && b.status === 'AWAITING_PAYMENT' && <Notice>Exact job location becomes available after the booking is confirmed.</Notice>}
-                  {user.role === 'CUSTOMER' && <Button variant="outline" to={'/professionals/' + b.worker}>View professional profile</Button>}
-                </Panel>
-                <Panel title="Progress">
-                  <ol className="timeline">
-                    {[
-                      ['AWAITING_PAYMENT', 'Booking arranged', b.createdAt],
-                      [
-                        'CONFIRMED',
-                        'Payment recorded',
-                        payment.data?.payment.paidAt,
-                      ],
-                      ['IN_PROGRESS', 'Work started', b.startedAt],
-                      [
-                        'WORKER_MARKED_COMPLETED',
-                        'Professional marked complete',
-                        b.workerCompletedAt,
-                      ],
-                      ['COMPLETED', 'Customer confirmed', b.completedAt],
-                    ].map(([s, t, d]) => (
-                      <li className={d || b.status === s ? 'done' : ''} key={s}>
-                        <span />
-                        <div>
-                          <strong>{t}</strong>
-                          <small>
-                            {d
-                              ? dateTime(d)
-                              : b.status === s
-                                ? 'Current step'
-                                : 'Not reached yet'}
-                          </small>
-                        </div>
-                      </li>
-                    ))}
-                  </ol>
-                  {b.status === 'DISPUTED' && (
-                    <Notice>
-                      This booking is under dispute review. Payment stays
-                      held until an administrator resolves the case.
-                    </Notice>
-                  )}
-                </Panel>
-                {(b.completionNotes || b.completionEvidence?.length > 0) && (
-                  <Panel title="Work shared by your professional">
-                    <p>{b.completionNotes}</p>
-                    <div className="portfolio-grid">
-                      {b.completionEvidence?.map((mid) => (
-                        <ProtectedMedia
-                          key={mid}
-                          path={
-                            '/bookings/' + id + '/evidence/' + mid + '/access'
-                          }
-                          alt="Private completion evidence"
-                        />
-                      ))}
-                    </div>
-                  </Panel>
-                )}
-              </div>
-              <div className="stack">
-                <Panel title="Your next step">
+                <Panel title="Your next step" className="next-step-panel">
                   {actions.includes('pay') && (
                     <>
                       <p className="muted">
@@ -376,12 +302,47 @@ export function BookingDetails() {
                     </p>
                   )}
                 </Panel>
+                <Panel title="Your service">
+                  <div className="row booking-person">
+                    <Avatar person={b.counterpart} src={b.counterpart?.profileImage?.url} size="large" />
+                    <div><p className="muted small">{user.role === 'WORKER' ? 'Your customer' : 'Your professional'}</p>
+                      <h2>{displayName(b.counterpart) || (user.role === 'WORKER' ? 'Customer unavailable' : 'Professional unavailable')}</h2>
+                      <p>{b.serviceSummary?.name || 'Service unavailable'}</p>
+                    </div>
+                  </div>
+                  <p className="prose">{b.description}</p>
+                  <dl className="fact-grid">
+                    <div>
+                      <dt>When</dt>
+                      <dd>{dateTime(b.scheduledStart)} – {timeOnly(b.scheduledEnd)}</dd>
+                    </div>
+                    <div>
+                      <dt>General area</dt>
+                      <dd>{b.serviceArea?.name}</dd>
+                    </div>
+                    {b.privateAddress && (
+                      <div>
+                        <dt>Private booking address</dt>
+                        <dd>{b.privateAddress}</dd>
+                      </div>
+                    )}
+                    <div>
+                      <dt>Agreed amount</dt>
+                      <dd>{money(b.agreedAmountBututs)}</dd>
+                    </div>
+                  </dl>
+                  {(user.role === 'CUSTOMER' || ['CONFIRMED', 'IN_PROGRESS', 'WORKER_MARKED_COMPLETED', 'COMPLETED', 'DISPUTED'].includes(b.status)) && <JobLocationLink location={b.location} />}
+                  {user.role === 'WORKER' && b.status === 'AWAITING_PAYMENT' && <Notice>Exact job location becomes available after the booking is confirmed.</Notice>}
+                  {user.role === 'CUSTOMER' && <Button variant="outline" to={'/professionals/' + b.worker}>View professional profile</Button>}
+                </Panel>
+              </div>
+              <div className="stack">
                 <Panel title="Payment">
                   <PaymentDemoLabel />
                   {payment.data ? (
                     <>
                       <Chip status={payment.data.payment.status} />
-                      <dl className="details">
+                      <dl className="details compact">
                         <div>
                           <dt>Total</dt>
                           <dd>{money(payment.data.payment.amountBututs)}</dd>
@@ -415,6 +376,22 @@ export function BookingDetails() {
                     <p className="muted">Loading payment…</p>
                   )}
                 </Panel>
+                {(b.completionNotes || b.completionEvidence?.length > 0) && (
+                  <Panel title="Work shared by your professional">
+                    <p>{b.completionNotes}</p>
+                    <div className="portfolio-grid">
+                      {b.completionEvidence?.map((mid) => (
+                        <ProtectedMedia
+                          key={mid}
+                          path={
+                            '/bookings/' + id + '/evidence/' + mid + '/access'
+                          }
+                          alt="Private completion evidence"
+                        />
+                      ))}
+                    </div>
+                  </Panel>
+                )}
               </div>
             </div>
           </>

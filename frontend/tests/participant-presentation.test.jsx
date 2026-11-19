@@ -44,8 +44,8 @@ it.each(['CUSTOMER', 'WORKER'])('shows the other person, photo, service and stat
 it.each(['CUSTOMER', 'WORKER'])('shows the counterpart and a reached arranged milestone on completed %s booking details', async role => {
   mount(BookingDetails, role, '/app/bookings/booking', '/app/bookings/:id');
   expect(await screen.findByText(role === 'WORKER' ? 'Bruno Ceesay' : 'Musa Banja')).toBeVisible();
-  expect(screen.getByText('Electrician')).toBeVisible();
-  const milestone = screen.getByText('Booking arranged').closest('li');
+  expect(screen.getAllByText('Electrician')[0]).toBeVisible();
+  const milestone = screen.getByText('Booked').closest('li');
   expect(milestone).toHaveClass('done');
   expect(within(milestone).queryByText('Not reached yet')).not.toBeInTheDocument();
 });
