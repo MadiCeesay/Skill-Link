@@ -100,10 +100,13 @@ export function bookingService(config, matching, media) {
           ...source,
           ...input,
           status: 'AWAITING_PAYMENT',
+          // The customer always gets the full payment window, even for a job that starts
+          // soon. Capping it at scheduledStart made near-term bookings expire within seconds.
+          // The hold still ends before the job's end time, so a dead slot is never payable.
           reservationExpiresAt: new Date(
             Math.min(
               Date.now() + (config.BOOKING_RESERVATION_MINUTES ?? 15) * 60000,
-              input.scheduledStart.getTime(),
+              input.scheduledEnd.getTime(),
             ),
           ),
         },

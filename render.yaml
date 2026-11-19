@@ -1,0 +1,45 @@
+# Render Blueprint for the SkillLink API (backend only; the frontend goes on Vercel).
+# Render → New → Blueprint → pick this repo. Values marked sync: false are asked for once.
+services:
+  - type: web
+    name: skilllink-api
+    runtime: node
+    rootDir: backend
+    plan: free
+    buildCommand: npm ci --omit=dev --include=optional
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 22.12.0
+      - key: NODE_ENV
+        value: production
+      # Render sits one proxy in front of the app. Without this, every user shares one IP
+      # and the rate limiter blocks everyone together.
+      - key: TRUST_PROXY_HOPS
+        value: 1
+      - key: MONGODB_URI
+        sync: false # MongoDB Atlas connection string (mongodb+srv://...)
+      - key: FRONTEND_ORIGIN
+        sync: false # Vercel URL, exact, no trailing slash, e.g. https://skill-link.vercel.app
+      - key: PUBLIC_API_URL
+        sync: false # This service's URL, e.g. https://skilllink-api.onrender.com
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: BOOKING_RESERVATION_MINUTES
+        value: 15
+      # Payments: modempay needs the test secret key (sk_test_...). Use mock for a no-money demo.
+      - key: PAYMENT_PROVIDER
+        value: modempay
+      - key: MODEMPAY_SECRET_KEY
+        sync: false
+      - key: MODEMPAY_WEBHOOK_SECRET
+        sync: false
+      - key: MODEMPAY_AMOUNT_UNIT
+        value: GMD
+      # Photos, verification files and voice notes need Cloudinary (Render's disk is wiped
+      # on every deploy). Fill the three keys, then change MEDIA_PROVIDER to cloudinary.
+      - key: MEDIA_PROVIDER
+        value: disabled

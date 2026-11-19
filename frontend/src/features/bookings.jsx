@@ -36,7 +36,7 @@ import {
   PaymentDemoLabel,
 } from '../components/ui';
 import { money, dateTime, displayName, paymentEventLabel } from '../utils/format';
-import { bookingActions, homeFor } from '../utils/policy';
+import { bookingActions, homeFor, paymentOpen } from '../utils/policy';
 import { StartChat } from './messaging';
 import { JobLocationLink } from '../components/JobLocation';
 export function Bookings() {
@@ -437,6 +437,11 @@ export function PaymentRedirect() {
     </Panel>
   )}</QueryState>;
 }
+function timeLeft(until, now) {
+  const total = Math.max(0, Math.floor((new Date(until) - now) / 1000));
+  const m = Math.floor(total / 60), sec = total % 60;
+  return m + ':' + String(sec).padStart(2, '0');
+}
 export function Payment() {
   const { id } = useParams(),
     { user } = useAuth(),
@@ -449,7 +454,14 @@ export function Payment() {
     providerQuery = useApi('/payments/provider'),
     action = useAction(),
     verify = useAction(),
-    verified = useRef(false);
+    verified = useRef(false),
+    [now, setNow] = useState(() => new Date());
+  // Ticks every second so the countdown is live and the Pay button disappears the moment
+  // the hold runs out, instead of waiting for the server to refuse the payment.
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
   const p = query.data?.payment,
     ledger = useApi(p ? '/payments/' + p.id + '/ledger' : null),
     live = providerQuery.data?.redirects === true,
@@ -483,6 +495,11 @@ export function Payment() {
       toast('Payment result recorded.');
     } catch (e) {
       setError(e);
+      // The booking changed on the server (hold ran out, cancelled or already paid): reload it.
+      if (['RESERVATION_EXPIRED', 'BOOKING_CLOSED', 'BOOKING_ALREADY_PAID', 'BOOKING_NOT_PAYABLE'].includes(e.code)) {
+        booking.refetch();
+        query.refetch();
+      }
     }
   }
   async function checkAgain() {
@@ -542,7 +559,18 @@ export function Payment() {
                   </dl>
                 </>
               )}
-              {user.role === 'CUSTOMER' && b.status === 'AWAITING_PAYMENT' && (
+              {user.role === 'CUSTOMER' && b.status === 'AWAITING_PAYMENT' && !paymentOpen(b, now) && (
+                <Notice>
+                  The time to pay for this booking has run out, so the slot was released. Create a new
+                  request to book this professional again.
+                </Notice>
+              )}
+              {user.role === 'CUSTOMER' && paymentOpen(b, now) && (
+                <p className="small muted" role="timer">
+                  Time left to pay: <strong>{timeLeft(b.reservationExpiresAt, now)}</strong>
+                </p>
+              )}
+              {user.role === 'CUSTOMER' && paymentOpen(b, now) && (
                 <form className="form-stack" onSubmit={pay}>
                   {live ? (
                     <>

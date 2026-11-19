@@ -14,6 +14,7 @@ import {
   canEditJob,
   canChangeQuote,
   bookingActions,
+  paymentOpen,
   homeFor,
 } from '../src/utils/policy';
 describe('Integer GMD display and input', () => {
@@ -120,5 +121,19 @@ describe('Role and lifecycle presentation', () => {
     expect(displayName({ firstName: 'Lamin', lastName: 'Jallow' })).toBe(
       'Lamin Jallow',
     );
+  });
+});
+
+describe('payment window', () => {
+  const later = new Date(Date.now() + 600000).toISOString();
+  const earlier = new Date(Date.now() - 1000).toISOString();
+  it('offers payment only while the hold is open', () => {
+    expect(paymentOpen({ status: 'AWAITING_PAYMENT', reservationExpiresAt: later, scheduledEnd: later })).toBe(true);
+    expect(paymentOpen({ status: 'AWAITING_PAYMENT', reservationExpiresAt: earlier, scheduledEnd: later })).toBe(false);
+    expect(paymentOpen({ status: 'CANCELLED', reservationExpiresAt: later })).toBe(false);
+  });
+  it('hides Pay and Cancel on an expired hold', () => {
+    expect(bookingActions({ status: 'AWAITING_PAYMENT', reservationExpiresAt: earlier }, 'CUSTOMER')).toEqual([]);
+    expect(bookingActions({ status: 'AWAITING_PAYMENT', reservationExpiresAt: later }, 'CUSTOMER')).toEqual(['pay', 'cancel']);
   });
 });

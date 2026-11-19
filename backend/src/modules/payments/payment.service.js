@@ -83,6 +83,17 @@ async function holdPayment(p, b, session) {
   b.status = 'CONFIRMED';
   await b.save({ session });
 }
+// Explains exactly why a booking cannot be paid, so the page can tell the customer what to do.
+export function assertPayable(b, now = new Date()) {
+  if (['CONFIRMED', 'IN_PROGRESS', 'WORKER_MARKED_COMPLETED', 'COMPLETED', 'DISPUTED'].includes(b.status))
+    throw new ApiError(409, 'BOOKING_ALREADY_PAID', 'This booking has already been paid');
+  if (b.status !== 'AWAITING_PAYMENT')
+    throw new ApiError(409, 'BOOKING_CLOSED', 'This booking was cancelled. Create a new request to book again');
+  if (!(b.reservationExpiresAt > now))
+    throw new ApiError(409, 'RESERVATION_EXPIRED', 'The time to pay for this booking ran out. Create a new request to book again');
+  if (!(b.scheduledEnd > now))
+    throw new ApiError(409, 'BOOKING_CLOSED', 'The booked time has already passed. Create a new request to book again');
+}
 export function paymentService(config, provider) {
   // Creates (or reuses) the PENDING payment and a Modem Pay checkout for it.
   async function startRedirectCheckout(b, user, input, session) {
@@ -182,16 +193,7 @@ export function paymentService(config, provider) {
             idempotent: true,
           };
         }
-        if (
-          b.status !== 'AWAITING_PAYMENT' ||
-          b.reservationExpiresAt <= new Date() ||
-          b.scheduledStart <= new Date()
-        )
-          throw new ApiError(
-            409,
-            'BOOKING_NOT_PAYABLE',
-            'Booking is closed, already paid, or its reservation expired',
-          );
+        assertPayable(b);
         if (
           !(await User.exists({
             _id: b.worker,

@@ -361,6 +361,32 @@ async function disputed() {
   expect(r.status, JSON.stringify(r.body)).toBe(201);
   return { b, d: r.body.data.dispute };
 }
+describe('Payment window', () => {
+  it('still accepts payment after the start time while the hold and the job are still open', async () => {
+    const b = await reserve();
+    await Booking.updateOne(
+      { _id: b._id },
+      { $set: { scheduledStart: new Date(Date.now() - 60000), scheduledEnd: new Date(Date.now() + 3600000) } },
+    );
+    expect((await checkout(b, customer, 'SUCCESS', 'late-start')).status).toBe(200);
+    expect((await Booking.findById(b._id)).status).toBe('CONFIRMED');
+  });
+  it('explains why a booking cannot be paid', async () => {
+    const expired = await reserve();
+    await Booking.updateOne({ _id: expired._id }, { $set: { reservationExpiresAt: new Date(Date.now() - 1000) } });
+    const r1 = await checkout(expired, customer, 'SUCCESS', 'expired-key');
+    expect(r1.status).toBe(409);
+    expect(r1.body.error.code).toBe('RESERVATION_EXPIRED');
+    const done = await reserve(slot(12, 13));
+    expect((await checkout(done, customer, 'SUCCESS', 'first-key')).status).toBe(200);
+    const r2 = await checkout(done, customer, 'SUCCESS', 'second-key');
+    expect(r2.body.error.code).toBe('BOOKING_ALREADY_PAID');
+    const cancelled = await reserve(slot(14, 15));
+    await api('post', '/bookings/' + cancelled.id + '/cancel', customer).send({ reason: 'Plans changed' });
+    const r3 = await checkout(cancelled, customer, 'SUCCESS', 'cancelled-key');
+    expect(r3.body.error.code).toBe('BOOKING_CLOSED');
+  });
+});
 describe('Phase 7 execution, settlement and reviews', () => {
   it('worker starts a confirmed booking at its scheduled time', async () => {
     const b = await started();
