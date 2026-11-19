@@ -1,6 +1,6 @@
 // Shows whether the payment settings are present, without printing any secret.
 import 'dotenv/config';
-const show = name => { const v = process.env[name]; return v ? `set (${v.length} characters${v.startsWith('sk_test_') ? ', test key' : v.startsWith('sk_live_') ? ', LIVE key' : ''})` : 'missing'; };
+const show = name => { const v = process.env[name]; return v ? `set (${v.length} characters${v.startsWith('sk_test_') ? ', test key' : v.startsWith('sk_live_') ? ', LIVE key' : v.startsWith('pk_') ? ', PUBLIC key - wrong, use the secret key' : ''})` : 'missing'; };
 console.log('PAYMENT_PROVIDER       ', process.env.PAYMENT_PROVIDER || 'missing (defaults to mock)');
 console.log('MODEMPAY_SECRET_KEY    ', show('MODEMPAY_SECRET_KEY'));
 console.log('MODEMPAY_WEBHOOK_SECRET', show('MODEMPAY_WEBHOOK_SECRET'), '(optional on localhost)');

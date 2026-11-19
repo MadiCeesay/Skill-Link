@@ -149,6 +149,8 @@ export function createApp(config, options = {}) {
   );
   if (config.PAYMENT_PROVIDER === 'modempay' && !config.MODEMPAY_SECRET_KEY && !options.paymentProvider)
     throw new Error('PAYMENT_PROVIDER=modempay needs MODEMPAY_SECRET_KEY');
+  if (config.PAYMENT_PROVIDER === 'modempay' && /^pk_/.test(config.MODEMPAY_SECRET_KEY || '') && !options.paymentProvider)
+    throw new Error('PAYMENT_PROVIDER=modempay: MODEMPAY_SECRET_KEY is the public key (pk_...). Use the secret key (sk_test_...).');
   const paymentProvider = options.paymentProvider ?? (config.PAYMENT_PROVIDER === 'modempay'
     ? new ModemPayProvider({
         secretKey: config.MODEMPAY_SECRET_KEY,
