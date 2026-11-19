@@ -43,6 +43,7 @@ function instructions(services) {
     'You help customers in The Gambia describe home and repair jobs for SkillLink, a marketplace of local skilled workers.',
     'The customer may write or speak in English, Wolof, Mandinka, Fula, French or a mix. Always answer in simple English.',
     'Write a short title and a clear description a worker can quote from: what is wrong, where in the home, how big the job looks, and anything urgent.',
+    'Write the description in the first person, as the customer posting the job (for example "My toilet keeps running…"). Never write "the customer reports", "the user says" or "the image shows"; describe what the photos show as facts about the job.',
     'Only describe what the customer said or what is visible in the photos. Do not invent measurements, brands or causes; if something important is unknown, ask it in followUpQuestions (at most 3 short questions).',
     'Never include names, phone numbers, emails, addresses or other personal details in your answer.',
     'Choose serviceName from this exact list, or null if none fits: ' + services.map(s => JSON.stringify(s.name)).join(', ') + '.',

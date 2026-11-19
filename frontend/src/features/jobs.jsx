@@ -59,6 +59,18 @@ export const scheduleFields = [
     step: 60,
   },
 ];
+// Suggests a booking time from the offer: its proposed date at 09:00 if that is still ahead,
+// otherwise 30 minutes from now; the finish follows the estimated duration (default 1 hour).
+const localInput = (d) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+export function suggestedSchedule(quote, now = new Date()) {
+  let start = quote?.proposedSchedule?.date ? new Date(quote.proposedSchedule.date + 'T09:00') : null;
+  if (!start || Number.isNaN(start.getTime()) || start <= now) {
+    start = new Date(now.getTime() + 30 * 60000);
+    start.setMinutes(Math.ceil(start.getMinutes() / 5) * 5, 0, 0);
+  }
+  const end = new Date(start.getTime() + (quote?.estimatedDurationMinutes || 60) * 60000);
+  return { scheduledStart: localInput(start), scheduledEnd: localInput(end) };
+}
 export const scheduleBody = (v) => {
   const start = toUTC(v.scheduledStart),
     end = toUTC(v.scheduledEnd);
@@ -638,21 +650,13 @@ export function JobDetails() {
                   ) : j.status === 'QUOTE_ACCEPTED' ? (
                     <>
                       <Notice>
-                        Offer accepted. Choose a schedule to create your
-                        booking. No booking has been created automatically.
+                        Offer accepted. Choose a time under the accepted offer
+                        to create your booking.
                       </Notice>
-                      <ActionForm
-                        path="/bookings/from-quote"
-                        fields={scheduleFields}
-                        build={(v) => ({
-                          quote: j.acceptedQuote,
-                          ...scheduleBody(v),
-                        })}
-                        submit="Create booking"
-                        onSuccess={(d) =>
-                          navigate('/app/bookings/' + d.booking.id)
-                        }
-                      />
+                      <button type="button" className="text-button"
+                        onClick={() => document.getElementById('book-accepted')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}>
+                        Choose a time ↓
+                      </button>
                     </>
                   ) : (
                     <>
@@ -667,7 +671,7 @@ export function JobDetails() {
                   )}
                 </Panel>
               </div>
-              {!worker && <ReceivedQuotes job={j} />}
+              {!worker && <ReceivedQuotes job={j} onBooked={(b) => navigate('/app/bookings/' + b.id)} />}
             </>
           );
         }}
@@ -743,7 +747,7 @@ function QuoteForm({ jobId, quote }) {
     </>
   );
 }
-function ReceivedQuotes({ job }) {
+function ReceivedQuotes({ job, onBooked }) {
   const [page, setPage] = useState(1),
     query = useApi(
       '/job-requests/' + job.id + '/quotes',
@@ -816,11 +820,28 @@ function ReceivedQuotes({ job }) {
                           description={
                             'Accept this offer for ' +
                             money(q.proposedAmountBututs) +
-                            '? Competing pending offers will close. Choose your booking schedule afterward.'
+                            '? Competing pending offers will close. You will choose the time next.'
+                          }
+                          onSuccess={() =>
+                            setTimeout(() => document.getElementById('book-accepted')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300)
                           }
                         />
                       )}
                     </div>
+                    {job.status === 'QUOTE_ACCEPTED' && job.acceptedQuote === q.id && (
+                      <div className="book-accepted" id="book-accepted">
+                        <h4>Choose a time to book {q.workerProfile ? displayName(q.workerProfile) : 'this professional'}</h4>
+                        <p className="small muted">We filled in a time from the offer. Change it if you need to.</p>
+                        <ActionForm
+                          path="/bookings/from-quote"
+                          fields={scheduleFields}
+                          initial={suggestedSchedule(q)}
+                          build={(v) => ({ quote: q.id, ...scheduleBody(v) })}
+                          submit="Create booking"
+                          onSuccess={(d) => onBooked(d.booking)}
+                        />
+                      </div>
+                    )}
                   </article>
                 ))}
               </div>

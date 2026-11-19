@@ -4568,3 +4568,12 @@ td .actions {
 @media (max-width: 760px) {
   .recruit-photo, .recruit-photo img { min-height: 0; height: auto; }
 }
+/* Booking form shown right under the accepted offer */
+.book-accepted {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--line, #e7ddd2);
+}
+.book-accepted h4 {
+  margin: 0 0 4px;
+}
