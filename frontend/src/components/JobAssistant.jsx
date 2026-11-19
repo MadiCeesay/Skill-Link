@@ -8,6 +8,14 @@ import { Button, ErrorNotice, Field, FileUpload } from './ui';
 
 const URGENCY = { LOW: 'Not urgent', NORMAL: 'Normal', URGENT: 'Urgent' };
 
+// Adds the customer's answers to the follow-up questions to the description.
+export function withAnswers(draft, answers) {
+  const lines = draft.followUpQuestions
+    .filter((q) => answers[q]?.trim())
+    .map((q) => '• ' + q + ' ' + answers[q].trim());
+  return lines.length ? { ...draft, description: draft.description + '\n\nMore details:\n' + lines.join('\n') } : draft;
+}
+
 // Records one short voice note in a format the server accepts (Opus in Ogg or WebM).
 function useVoiceNote() {
   const [file, setFile] = useState(null),
@@ -57,6 +65,7 @@ export function JobAssistant({ onApply }) {
     [busy, setBusy] = useState(false),
     [error, setError] = useState(null),
     [draft, setDraft] = useState(null),
+    [answers, setAnswers] = useState({}),
     [previewUrl, setPreviewUrl] = useState(null);
   useEffect(() => {
     if (!voice.file) return setPreviewUrl(null);
@@ -142,13 +151,18 @@ export function JobAssistant({ onApply }) {
           {draft.safetyNote && <p className="assistant-warning"><AlertTriangle size={16} aria-hidden="true" /> {draft.safetyNote}</p>}
           {draft.followUpQuestions.length > 0 && (
             <div>
-              <p className="small"><strong>Add these details if you know them:</strong></p>
-              <ul className="small">{draft.followUpQuestions.map((q) => <li key={q}>{q}</li>)}</ul>
+              <p className="small"><strong>Answer what you know — it helps professionals price the job:</strong></p>
+              <div className="assistant-questions">
+                {draft.followUpQuestions.map((q) => (
+                  <Field key={q} label={q} value={answers[q] || ''} maxLength={200} placeholder="Optional"
+                    onChange={(e) => setAnswers((a) => ({ ...a, [q]: e.target.value }))} />
+                ))}
+              </div>
             </div>
           )}
           {draft.confidence < 0.5 && <p className="muted small">The assistant was not very sure. Please read it carefully.</p>}
           <div className="row wrap">
-            <Button type="button" onClick={() => onApply(draft, photos)}>Use this</Button>
+            <Button type="button" onClick={() => onApply(withAnswers(draft, answers), photos)}>Use this</Button>
             <Button type="button" variant="outline" onClick={ask} disabled={!canAsk}><RefreshCw size={16} /> Try again</Button>
           </div>
         </div>

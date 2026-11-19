@@ -4521,3 +4521,12 @@ td .actions {
   border: 1px solid var(--line, #e5e5e5);
   background: #fff;
 }
+/* Job photos: thumbnails rather than half-page images */
+.attachment-grid {
+  grid-template-columns: repeat(auto-fill, minmax(120px, 180px));
+  gap: 12px;
+}
+.assistant-questions {
+  display: grid;
+  gap: 10px;
+}

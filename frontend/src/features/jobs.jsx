@@ -1,6 +1,6 @@
 import { JobLocation } from '../components/JobLocation';
 import { JobAssistant } from '../components/JobAssistant';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowUpRight,
@@ -288,6 +288,7 @@ function JobForm({ existing: j }) {
     }
   }
   // Copies the AI suggestion into the form. Everything stays editable.
+  const formTop = useRef(null);
   function applyDraft(draft, photoIds) {
     setTitle(draft.title);
     setDescription(draft.description);
@@ -298,12 +299,14 @@ function JobForm({ existing: j }) {
       setBudgetMax(gmdInput(draft.priceRange.maxBututs));
     }
     setAssistantAttachments(photoIds);
-    toast('The suggestion is in the form. Check it and change anything that is not right.');
+    toast('Added to the form. Now choose where and when, then post your request.');
+    // Take the customer straight to the form, where location and timing are still to fill.
+    requestAnimationFrame(() => formTop.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
   }
   return (
     <form onSubmit={save} className="form-stack">
       {!j && <JobAssistant onApply={applyDraft} />}
-      <div className="two-grid">
+      <div className="two-grid" ref={formTop}>
         <div className="stack">
           <Panel
             title="01 / The work"
@@ -566,7 +569,7 @@ export function JobDetails() {
                     </div>
                   )}
                   {!!j.attachments.length && (
-                    <div className="portfolio-grid">
+                    <div className="portfolio-grid attachment-grid">
                       {j.attachments.map((mid) => (
                         <ProtectedMedia
                           key={mid}
