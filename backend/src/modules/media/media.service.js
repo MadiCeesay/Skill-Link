@@ -71,7 +71,13 @@ export function mediaService(provider) {
       if (!id) return null;
       const asset = await MediaAsset.findOne({ _id: id, purpose: mongoose.trusted({ $in: imagePurposes }) }).select('+storageKey +resourceType +format +deliveryType');
       if (!asset) return null;
-      return { ...mediaDTO(asset), ...await this.link(asset, 300) };
+      // A missing photo must not break a whole page (e.g. the professionals list) when the
+      // media provider is switched off or unreachable: show the profile without the image.
+      try { return { ...mediaDTO(asset), ...await this.link(asset, 300) }; }
+      catch (error) {
+        if (['MEDIA_UNAVAILABLE', 'MEDIA_PROVIDER_ERROR'].includes(error.code)) return null;
+        throw error;
+      }
     },
   };
 }

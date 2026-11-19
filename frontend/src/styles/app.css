@@ -4561,3 +4561,10 @@ td .actions {
 .job-summary .prose {
   white-space: pre-line;
 }
+/* Recruitment photo fills its rounded card edge to edge (no white bands above or below). */
+.recruit-photo { min-height: 0; height: auto; line-height: 0; background: #fbe2c6; }
+.recruit-photo img { display: block; width: 100%; height: auto; min-height: 0; aspect-ratio: 3 / 2; object-fit: cover; object-position: center; }
+.recruit-label { line-height: normal; }
+@media (max-width: 760px) {
+  .recruit-photo, .recruit-photo img { min-height: 0; height: auto; }
+}
