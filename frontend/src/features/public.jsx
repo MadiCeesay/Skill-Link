@@ -494,7 +494,7 @@ export function Discovery() {
     );
   }
   return (
-    <div className="container section">
+    <div className="container section discovery-page">
       <PageTitle
         eyebrow="GOOD PEOPLE. SKILLED HANDS."
         title="Find your right fit."

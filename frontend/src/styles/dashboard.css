@@ -1126,3 +1126,36 @@
 @media (max-width: 760px) {
   .overview-lower-grid.two { grid-template-columns: 1fr; }
 }
+/* Cards in a row share one height (content stays compact) */
+.overview-operational-grid,
+.overview-lower-grid { align-items: stretch; }
+.dashboard-overview .panel { display: flex; flex-direction: column; }
+.overview-footer-note { margin-top: 0; }
+/* Requests as a clean list, not cards inside cards */
+.overview-request-list { gap: 0; }
+.overview-request {
+  background: none;
+  border: 0;
+  border-radius: 0;
+  border-bottom: 1px solid #f4eee6;
+  padding: 10px 2px;
+}
+.overview-request:last-child { border-bottom: 0; }
+.overview-request .overview-row-icon { flex-basis: 34px; width: 34px; height: 34px; }
+.overview-request h3 { margin-bottom: 2px; font-size: 12.5px; }
+.overview-request p { margin-bottom: 3px; }
+.overview-request .button {
+  background: #fff;
+  color: var(--ink);
+  border: 1px solid var(--line);
+  min-height: 30px;
+  padding: 6px 12px;
+}
+.overview-request .button svg { display: none; }
+.overview-appointment { padding: 8px 0 12px; }
+/* Calmer body text inside the workspace */
+.workspace .prose { font-size: 13px; line-height: 1.6; }
+.workspace .panel p { margin-top: 0; margin-bottom: 8px; }
+.workspace .panel .quote-price { margin: 10px 0 6px; font-size: 22px; }
+.workspace .panel .actions { padding: 8px 0 0; gap: 8px; flex-wrap: wrap; justify-content: flex-start; }
+.workspace .panel p:not([class]) { font-size: 13px; line-height: 1.6; }

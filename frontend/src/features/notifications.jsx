@@ -80,10 +80,13 @@ export function Notifications() {
                       <Bell size={20} />
                     </span>
                     <div>
-                      {!n.readAt && <span className="notification-unread-label">Unread</span>}
-                      <h3>{n.title}</h3>
+                      <div className="notification-head">
+                        <h3>{n.title}</h3>
+                        {!n.readAt && <span className="notification-unread-label">Unread</span>}
+                      </div>
                       <p>{n.message}</p>
-                      <p className="muted">{dateTime(n.createdAt)}</p>
+                      <div className="notification-meta">
+                      <span className="muted">{dateTime(n.createdAt)}</span>
                       <Link
                         className="text-link"
                         to={target(n, user)}
@@ -97,6 +100,7 @@ export function Notifications() {
                         View update
                         <ArrowUpRight size={15} />
                       </Link>
+                      </div>
                     </div>
                     {!n.readAt && (
                       <button

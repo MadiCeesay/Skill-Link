@@ -4700,3 +4700,43 @@ td .actions {
   .workspace-content .page-title h1 { font-size: 22px; }
   .panel { padding: 16px 14px; }
 }
+/* Professionals directory: shorter header, even cards */
+.discovery-page { padding-top: 28px; padding-bottom: 40px; }
+.discovery-page .page-title { margin-bottom: 18px; }
+.discovery-page .page-title h1 { font-size: clamp(24px, 2.4vw, 32px); }
+.worker-grid { gap: 14px; }
+.worker-card { display: flex; flex-direction: column; }
+.worker-card-top { min-height: 96px; padding: 14px; }
+.worker-card-body { padding: 14px 15px; flex: 1; display: flex; flex-direction: column; }
+.worker-card .small { margin: 6px 0; }
+.tags { margin: 8px 0; }
+.worker-card-bottom { margin-top: auto; padding-top: 10px; }
+/* Requests and opportunities: three even cards per row */
+.job-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+.job-card { padding: 16px 18px; display: flex; flex-direction: column; }
+.job-card .activity-icon { width: 32px; height: 32px; border-radius: 9px; }
+.job-card h2 { font-size: 15px; margin: 10px 0 6px; }
+.job-card .muted.clamp { font-size: 12px; margin: 0 0 8px; }
+.job-card > :last-child { margin-top: auto; }
+.job-bottom { padding-top: 10px; margin-top: auto; }
+.job-card .small.muted { margin: 0 0 10px; }
+.quote-grid { gap: 14px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+.quote-card { padding: 16px 18px; }
+.quote-price { font-size: 24px; }
+/* Booking list: short rows */
+.booking-row { padding: 12px 0; gap: 14px; }
+.booking-row .booking-person { margin-bottom: 2px; gap: 8px; font-size: 13px; }
+.booking-row h3 { font-size: 12.5px; font-weight: 500; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.booking-row p { margin: 2px 0 0; }
+.booking-date { width: 46px; min-height: 50px; }
+.booking-date strong { font-size: 18px; }
+.booking-row .avatar.small { width: 24px; height: 24px; font-size: 9px; }
+.booking-with::before { content: '· '; }
+/* Notifications: two short lines each */
+.notification-row { padding: 10px 12px; gap: 12px; align-items: center; }
+.notification-row .activity-icon { width: 32px; height: 32px; }
+.notification-head { display: flex; align-items: center; gap: 10px; }
+.notification-head h3 { margin: 0; }
+.notification-row p { margin: 2px 0 4px; font-size: 11.5px; }
+.notification-meta { display: flex; align-items: center; gap: 14px; font-size: 11px; }
+.notification-meta .text-link { font-size: 11px; }

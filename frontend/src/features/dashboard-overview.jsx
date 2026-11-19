@@ -119,8 +119,8 @@ export function BookingTimeline({ query, base, recent = false }) {
                   <CalendarDays size={19} />
                 </span>
                 <div>
-                  <strong>{b.description}</strong>
-                  <small>{b.serviceArea?.name}</small>
+                  <strong>{b.serviceSummary?.name || b.description}</strong>
+                  <small>{[displayName(b.counterpart), b.serviceArea?.name].filter(Boolean).join(' · ')}</small>
                   <Chip status={b.status} />
                 </div>
                 <ArrowUpRight size={14} />

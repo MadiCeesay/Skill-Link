@@ -83,10 +83,10 @@ export function Bookings() {
                       <div className="booking-row-main">
                         <div className="row booking-person">
                           <Avatar person={b.counterpart} src={b.counterpart?.profileImage?.url} size="small" />
-                          <strong>{displayName(b.counterpart) || (user.role === 'WORKER' ? 'Customer unavailable' : 'Professional unavailable')}</strong>
+                          <strong>{b.serviceSummary?.name || 'Service unavailable'}</strong>
+                          <span className="muted booking-with">{displayName(b.counterpart) || (user.role === 'WORKER' ? 'Customer unavailable' : 'Professional unavailable')}</span>
                         </div>
-                        <p><strong>{b.serviceSummary?.name || 'Service unavailable'}</strong></p>
-                        <h3>{b.description.slice(0, 80)}</h3>
+                        <h3>{b.description.slice(0, 90)}</h3>
                         <p className="muted small">
                           {b.serviceArea?.name} · {dateTime(b.scheduledStart)}
                         </p>
