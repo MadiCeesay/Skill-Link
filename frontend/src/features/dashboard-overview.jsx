@@ -300,7 +300,7 @@ export function RoleDashboard() {
               description="Make your professional profile visible to customers? Your profession, bio, services and service areas must be complete. Identity approval is still required for marketplace work." />
               <Button to="/work/profile" variant="outline">Edit professional profile</Button></div></Notice>}
           </> : <NextBooking query={bookings} user={user} base={base} />}
-          <div className="actions"><Button to={base + '/messages'} variant="outline">Messages</Button><Button to={base + '/notifications'} variant="outline">Notifications</Button></div>
+          {worker && <div className="actions"><Button to={base + '/messages'} variant="outline">Messages</Button><Button to={base + '/notifications'} variant="outline">Notifications</Button></div>}
         </Panel>
         <Panel title={worker ? 'Offers received' : 'Offers'} action={<SeeAll to={base + '/proposals'}>View offers</SeeAll>}>
           <QueryState query={proposals}>{data => {
@@ -405,7 +405,7 @@ export function RoleDashboard() {
           <BookingTimeline query={bookings} base={base} />
         </Panel>
       </div>
-      <div className="overview-lower-grid">
+      <div className={'overview-lower-grid' + (worker ? '' : ' two')}>
         <Panel
           title={worker ? 'Work & reputation' : 'Booking activity'}
           action={
@@ -499,7 +499,7 @@ export function RoleDashboard() {
             </QueryState>
           )}
         </Panel>
-        <Panel title={worker ? 'Earnings balance' : 'Your next steps'}>
+        <Panel title={worker ? 'Earnings balance' : 'Needs your attention'}>
           {worker ? (
             <QueryState query={financial}>
               {(data) => (
@@ -531,7 +531,7 @@ export function RoleDashboard() {
                         b.status,
                       ),
                     )
-                    .slice(0, 2)
+                    .slice(0, 3)
                     .map((b) => (
                       <Link
                         key={b.id}
@@ -555,38 +555,13 @@ export function RoleDashboard() {
                         <ArrowUpRight size={16} />
                       </Link>
                     ))
+                    .concat(
+                      data.bookings.some((b) => ['AWAITING_PAYMENT', 'WORKER_MARKED_COMPLETED'].includes(b.status))
+                        ? []
+                        : [<p key="none" className="muted small">Nothing needs your attention right now.</p>],
+                    )
                 }
               </QueryState>
-              <Link to="/app/bookings">
-                <span className="overview-row-icon">
-                  <CalendarDays size={20} />
-                </span>
-                <div>
-                  <strong>Manage your bookings</strong>
-                  <small>Payments, completion & reviews</small>
-                </div>
-                <ArrowUpRight size={16} />
-              </Link>
-              <Link to="/app/proposals">
-                <span className="overview-row-icon">
-                  <Users size={20} />
-                </span>
-                <div>
-                  <strong>Offers</strong>
-                  <small>Track your invitations</small>
-                </div>
-                <ArrowUpRight size={16} />
-              </Link>
-              <Link to="/app/notifications">
-                <span className="overview-row-icon">
-                  <Clock3 size={20} />
-                </span>
-                <div>
-                  <strong>Stay up to date</strong>
-                  <small>Offers and project updates</small>
-                </div>
-                <ArrowUpRight size={16} />
-              </Link>
             </div>
           )}
           {worker && (
@@ -595,33 +570,11 @@ export function RoleDashboard() {
             </p>
           )}
         </Panel>
-        <Panel
-          className="overview-finance"
-          title={worker ? 'Earnings summary' : 'Find a worker'}
-        >
-          {worker ? (
-            <SimulatedFinance query={financial} />
-          ) : (
-            <>
-              <div className="overview-discovery-icon">
-                <Users size={34} />
-              </div>
-              <h3>Choose how to find a worker</h3>
-              <p className="muted">
-                Choose a worker or post a request and compare
-                offers.
-              </p>
-              <Button to="/professionals">
-                Find a professional
-                <ArrowUpRight size={16} />
-              </Button>
-              <SeeAll to="/app/jobs/new">Post request</SeeAll>
-              <p className="overview-demo-note">
-                Agree a price before booking.
-              </p>
-            </>
-          )}
+        {worker && (
+        <Panel className="overview-finance" title="Earnings summary">
+          <SimulatedFinance query={financial} />
         </Panel>
+        )}
       </div>
       <div className="overview-footer-note">
         <ShieldCheck size={18} />

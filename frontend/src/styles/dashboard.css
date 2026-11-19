@@ -1096,3 +1096,33 @@
     z-index: 30;
   }
 }
+
+/* ---------- Compact dashboard: no stretched or half-empty cards ---------- */
+.overview-operational-grid,
+.overview-lower-grid { align-items: start; gap: 16px; margin-bottom: 16px; }
+.overview-lower-grid.two { grid-template-columns: 1fr 1fr; }
+.overview-lower-grid.two > :last-child { grid-column: auto; }
+.workspace .stats-grid { gap: 12px; margin-bottom: 16px; }
+.workspace .stat,
+.workspace .overview-kpis .stat { min-height: 0; padding: 10px 14px; border-radius: 18px; }
+.workspace .stat-icon { width: 36px; height: 36px; border-width: 3px; }
+.workspace .stat-icon svg { width: 18px; height: 18px; }
+.workspace .stat strong { font-size: 21px; }
+.workspace .panel { padding: 16px 18px; border-radius: 16px; }
+.workspace .panel-head { margin-bottom: 10px; }
+.dashboard-overview .empty { min-height: 0; padding: 10px 4px; }
+.overview-priority { margin-bottom: 16px; }
+/* Next booking on two lines instead of a tall card */
+.overview-next-booking { display: grid; grid-template-columns: 1fr auto; gap: 6px 14px; align-items: center; }
+.overview-next-booking > .row { grid-column: 1 / -1; gap: 10px; }
+.overview-next-booking h3 { margin: 0; font-size: 15px; }
+.overview-next-booking > .row p { margin: 0; }
+.overview-next-booking > p { margin: 0; font-size: 12px; }
+.overview-next-booking > .chip { justify-self: start; }
+.overview-next-booking > .button { grid-column: 1 / -1; justify-self: start; }
+.overview-donut { width: 130px; height: 130px; }
+.overview-request { padding: 10px 12px; }
+.overview-footer-note { padding: 10px 16px; }
+@media (max-width: 760px) {
+  .overview-lower-grid.two { grid-template-columns: 1fr; }
+}
